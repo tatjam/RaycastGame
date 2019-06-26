@@ -1,6 +1,6 @@
 #include "Server.h"
 #include "../Map/Entity.h"
-
+#include "../Map/Entities/Tile/ESimpleDoor.h"
 
 void Server::mainFunc(int argc, char** argv)
 {
@@ -236,6 +236,10 @@ void Server::createDefaultWorld()
 			}
 		}
 	}
+
+	ESimpleDoor* door = (ESimpleDoor*)world.createGlobalEntity(Entity::DOOR_SIMPLE, this);
+	door->setTilePos(5, 5);
+
 }
 
 void Server::downloadTo(ConnectedClient* target)
@@ -256,7 +260,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 1;
+	targetPlayers = 2;
 }
 
 

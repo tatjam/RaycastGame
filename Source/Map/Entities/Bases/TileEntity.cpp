@@ -8,12 +8,7 @@ void TileEntity::start()
 	{
 		Map* map = getWorld()->map;
 
-		tile = &map->tiles[tileY * map->map_width + tileX];
-		tile->linked_entity = uid;
-	}
-	else
-	{
-		tile->linked_entity = uid;
+		setTilePos(tileX, tileY);
 	}
 }
 
@@ -30,6 +25,20 @@ bool TileEntity::onUserClick(SpriteEntity * player, Side side, sf::Vector2f pixe
 bool TileEntity::onUserRelease(SpriteEntity * player, Side side, sf::Vector2f pixel)
 {
 	return false;
+}
+
+void TileEntity::setTilePos(sf::Vector2i pos)
+{
+	if (tile != NULL)
+	{
+		tile->linked_entity = 0;
+	}
+
+	tileX = pos.x;
+	tileY = pos.y;
+	tile = &getWorld()->map->tiles[tileY * getWorld()->map->map_width + tileX];
+
+	tile->linked_entity = uid;
 }
 
 json TileEntity::serialize()

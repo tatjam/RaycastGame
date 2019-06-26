@@ -65,7 +65,10 @@
     <ClCompile Include="Source\Map\Entities\Bases\TileEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Map\Entities\Tile\EDoor.cpp">
+    <ClCompile Include="Source\Map\Entities\Tile\Bases\DoorEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Map\Entities\Tile\ESimpleDoor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -109,7 +112,10 @@
     <ClInclude Include="Source\Map\Tile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Map\Entities\Tile\EDoor.h">
+    <ClInclude Include="Source\Map\Entities\Tile\Bases\DoorEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Map\Entities\Tile\ESimpleDoor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

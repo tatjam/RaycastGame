@@ -27,7 +27,9 @@ enum Side
 	NORTH,
 	EAST,
 	SOUTH,
-	WEST
+	WEST,
+	CEILING,
+	FLOOR
 };
 
 using namespace nlohmann;

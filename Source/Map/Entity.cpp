@@ -3,7 +3,7 @@
 #include "../Client/Client.h"
 #include "../Server/Server.h"
 #include "Entities/EPlayer.h"
-
+#include "Entities/Tile/ESimpleDoor.h"
 
 void Entity::emitCommand(uint8_t command_id, Packet packet, ENetPeer * peer, bool reliable)
 {
@@ -88,6 +88,21 @@ void Entity::sendGenericCall(ENetPeer* peer, std::string cmd, json args)
 	
 }
 
+void Entity::sendGenericCallToAll(std::string cmd, json args)
+{
+	if (getProg()->isClient())
+	{
+		LOG(ERROR) << "Tried to send a generic call to all being a client.";
+		return;
+	}
+
+	auto clients = getProg()->getClients();
+	for (auto client : *clients)
+	{
+		sendGenericCall(client.peer, cmd, args);
+	}
+}
+
 void Entity::receivePacket(Packet packet, ENetPeer* peer)
 {
 	uint8_t command_id = packet.popByte();
@@ -128,6 +143,10 @@ Entity* Entity::createFromType(EntityType type, ProgramType* prog, uint32_t uid)
 	else if (type == PLAYER)
 	{
 		return new EPlayer(prog, uid);
+	}
+	else if (type == DOOR_SIMPLE)
+	{
+		return new ESimpleDoor(prog, uid);
 	}
 }
 

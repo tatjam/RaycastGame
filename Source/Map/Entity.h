@@ -8,8 +8,6 @@
 #include <enet/enet.h>
 #include "../ProgramType.h"
 
-class Player;
-
 class Entity
 {
 private:
@@ -24,7 +22,7 @@ public:
 	// some of the CommandID space, for example
 	// from trivial, once-in-a-while calls from doors
 	// and for very complex messages which require
-	// many arguments of arbitrary types, or arrays
+	// many arguments of arbitrary types, or array 
 	enum CommandID
 	{
 		SET_SPRITE_POSROT,
@@ -52,6 +50,7 @@ public:
 	{
 		UNIMPLEMENTED,	//< These should not exist in any save
 		PLAYER,
+		DOOR_SIMPLE,
 	};
 
 	uint32_t uid;
@@ -72,6 +71,8 @@ public:
 	virtual void onGenericCall(std::string cmd, json args, ENetPeer* peer);
 	// args can be empty
 	void sendGenericCall(ENetPeer* peer, std::string cmd, json args = json());
+
+	void sendGenericCallToAll(std::string cmd, json args = json());
 
 	// Dispatches the command to either the client handler or the server handle
 	void receivePacket(Packet packet, ENetPeer* peer);

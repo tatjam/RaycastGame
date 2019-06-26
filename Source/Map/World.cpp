@@ -195,6 +195,11 @@ Entity* World::receiveNewEntity(Packet pak, ProgramType* prog)
 
 Entity* World::findEntity(uint32_t uid)
 {
+	if (uid == 0)
+	{
+		return NULL;
+	}
+
 	for (size_t i = 0; i < entities.size(); i++)
 	{
 		if (entities[i]->uid == uid)
@@ -202,6 +207,21 @@ Entity* World::findEntity(uint32_t uid)
 			return entities[i];
 		}
 	}
+
+	return NULL;
+}
+
+Sprite* World::findSprite(uint32_t sprite_id)
+{
+	for (size_t i = 0; i < map->sprites.size(); i++)
+	{
+		if (map->sprites[i]->uid == sprite_id)
+		{
+			return map->sprites[i];
+		}
+	}
+
+	return NULL;
 }
 
 World::World()

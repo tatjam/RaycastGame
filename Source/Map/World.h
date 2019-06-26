@@ -67,6 +67,7 @@ public:
 	Entity* receiveNewEntity(Packet pak, ProgramType* prog);
 
 	Entity* findEntity(uint32_t uid);
+	Sprite* findSprite(uint32_t sprite_id);
 
 	World();
 	~World();

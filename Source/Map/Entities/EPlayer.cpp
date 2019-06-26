@@ -8,6 +8,9 @@ void EPlayer::update(float dt)
 
 	if (getProg()->isClient())
 	{
+		sf::Vector2f delta;
+		float speed = 2.5f;
+
 		if (getProg()->getWindow()->hasFocus() && isControlled())
 		{
 
@@ -26,10 +29,7 @@ void EPlayer::update(float dt)
 			sf::Vector2f dir; dir.x = sin(getSprite()->angle); dir.y = cos(getSprite()->angle);
 			sf::Vector2f perpdir; perpdir.x = sin(getSprite()->angle + PI / 2.0f); perpdir.y = cos(getSprite()->angle + PI / 2.0f);
 
-			float speed = 2.0f;
 
-
-			sf::Vector2f delta;
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 			{
@@ -56,6 +56,7 @@ void EPlayer::update(float dt)
 			{
 				noclip = false;
 			}
+		}
 
 			Map* map = getProg()->getWorld()->map;
 
@@ -199,7 +200,6 @@ void EPlayer::update(float dt)
 			deltaPos = sf::Vector2f(0.0f, 0.0f);
 			deltaAngle = 0.0f;
 		}
-	}
 
 
 	sendTimer -= dt;

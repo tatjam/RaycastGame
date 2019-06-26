@@ -135,7 +135,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dependency\easylogging++.cpp" />
-    <ClCompile Include="Source\Map\Entities\Tile\EDoor.cpp" />
+    <ClCompile Include="Source\Map\Entities\Tile\ESimpleDoor.cpp" />
+    <ClCompile Include="Source\Map\Entities\Tile\Bases\DoorEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\SpriteEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\TileEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\EPlayer.cpp" />
@@ -166,7 +167,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h" />
-    <ClInclude Include="Source\Map\Entities\Tile\EDoor.h" />
+    <ClInclude Include="Source\Map\Entities\Tile\ESimpleDoor.h" />
+    <ClInclude Include="Source\Map\Entities\Tile\Bases\DoorEntity.h" />
     <ClInclude Include="Source\Map\Entities\Bases\TileEntity.h" />
     <ClInclude Include="Source\Map\Entities\EPlayer.h" />
     <ClInclude Include="Source\Client\Client.h" />

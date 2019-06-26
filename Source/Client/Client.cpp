@@ -1,6 +1,5 @@
 #include "Client.h"
-
-
+#include "../Map/Entities/Bases/TileEntity.h"
 
 
 void Client::mainFunc(int argc, char** argv)
@@ -187,6 +186,8 @@ void Client::play()
 	debugText.setFont(font);
 	debugText.setCharacterSize(16);
 
+	bool wasMouseClicked = false;
+
 	while (win->isOpen())
 	{
 		sf::Event event;
@@ -290,7 +291,13 @@ void Client::play()
 				else
 				{
 					string += "RPOS: (" + std::to_string(buffer.g) + ", " + std::to_string(buffer.b) + ") | ";
+
+					Side rSide;
+
 					string += "Flags: (";
+
+			
+
 
 					if (BIT_CHECK(buffer.a, 1))
 					{
@@ -310,19 +317,26 @@ void Client::play()
 						if (side == 0)
 						{
 							string += "North ";
+							rSide = Side::NORTH;
 						}
 						else if (side == 1)
 						{
 							string += "East ";
+							rSide = Side::EAST;
 						}
 						else if (side == 2)
 						{
 							string += "South ";
+							rSide = Side::SOUTH;
 						}
 						else
 						{
 							string += "West ";
+							rSide = Side::WEST;
 						}
+
+					
+
 					}
 					else
 					{
@@ -338,14 +352,48 @@ void Client::play()
 						if (BIT_CHECK(buffer.a, 5))
 						{
 							string += "Ceiling ";
+							rSide = Side::CEILING;
 						}
 						else
 						{
 							string += "Floor ";
+							rSide = Side::FLOOR;
 						}
 					}
 
 					string += ")";
+
+					Tile at = world.map->getTile(buffer.g, buffer.b);
+					TileEntity* tileEnt = (TileEntity*)world.findEntity(at.linked_entity);
+
+					if (tileEnt != NULL)
+					{
+						string += "Linked: " + std::to_string(tileEnt->uid) + " | ";
+
+						// Send hover
+						tileEnt->onUserHover(controlledEntityPtr, rSide, sf::Vector2f(texX, texY));
+
+						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+						{
+							if (!wasMouseClicked)
+							{
+								tileEnt->onUserClick(controlledEntityPtr, rSide, sf::Vector2f(texX, texY));
+								wasMouseClicked = true;
+							}
+							
+						}
+						else
+						{
+							if (wasMouseClicked)
+							{
+								tileEnt->onUserRelease(controlledEntityPtr, rSide, sf::Vector2f(texX, texY));
+							}
+
+							wasMouseClicked = false;
+						}
+					}
+
+
 				}
 
 				debugText.setString(string);
