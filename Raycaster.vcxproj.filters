@@ -62,6 +62,12 @@
     <ClCompile Include="Source\Map\Entities\Bases\SpriteEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Map\Entities\Bases\TileEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Map\Entities\Tile\EDoor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h">
@@ -101,6 +107,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Map\Tile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Map\Entities\Tile\EDoor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

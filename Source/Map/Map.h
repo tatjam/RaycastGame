@@ -20,6 +20,16 @@
 #define BIT_CHECK(a,b) (!!((a) & (1ULL<<(b)))) 
 #define BIT_CHANGE(a, b, v) ((a ^= (-v ^ a) & (1UL << b)))
 
+#define TEX_PREC 16.0f
+
+enum Side
+{
+	NORTH,
+	EAST,
+	SOUTH,
+	WEST
+};
+
 using namespace nlohmann;
 
 
@@ -57,7 +67,10 @@ private:
 
 public:
 
-	// r = Reserved
+	// r = Rough texture position, to be seen as a float
+	//		76543210
+	//		7654	-> X-position (0->16).
+	//		3210	-> Y-position (0->16)
 	// g = Pick Buffer Coord X (0->255) or Sprite High byte
 	// b = Pick Buffer Coord Y (0->255) or Sprite Low byte
 	// a = Extra Data: Byte decomposes into -> 

@@ -20,6 +20,11 @@ public:
 
 	// Note: Arguments are given in
 	// PUSH order, so POP them backwards
+	// GENERIC_CALL(_ARGS) is used to save
+	// some of the CommandID space, for example
+	// from trivial, once-in-a-while calls from doors
+	// and for very complex messages which require
+	// many arguments of arbitrary types, or arrays
 	enum CommandID
 	{
 		SET_SPRITE_POSROT,
@@ -33,6 +38,13 @@ public:
 
 		SET_INTERPOLATION,
 		// float ammount
+
+		GENERIC_CALL,
+		// string name
+
+		GENERIC_CALL_ARGS,
+		// string name
+		// json args
 	};
 
 	// You must register here an entity! (For serialization)
@@ -55,6 +67,11 @@ public:
 
 	// Emits a command to all connected clients, except one.
 	void emitCommandToAllBut(uint8_t command_id, Packet packet, ENetPeer* exception, bool reliable = true);
+
+	// args can be empty
+	virtual void onGenericCall(std::string cmd, json args, ENetPeer* peer);
+	// args can be empty
+	void sendGenericCall(ENetPeer* peer, std::string cmd, json args = json());
 
 	// Dispatches the command to either the client handler or the server handle
 	void receivePacket(Packet packet, ENetPeer* peer);
@@ -80,6 +97,11 @@ public:
 	ProgramType* getProg()
 	{
 		return program;
+	}
+
+	World* getWorld()
+	{
+		return program->getWorld();
 	}
 
 	virtual json serialize() 

@@ -74,7 +74,7 @@ void EPlayer::update(float dt)
 
 				if (next.walkable || noclip)
 				{
-
+					// Nothing here for now
 				}
 				else
 				{

@@ -2,6 +2,14 @@
 #include "Tile.h"
 #include "Sprite.h"
 
+sf::Uint8 encodeTexCoords(sf::Vector2f coords)
+{
+	uint8_t coordX = coords.x * TEX_PREC;
+	uint8_t coordY = coords.y * TEX_PREC;
+
+	return (coordX << 4) | coordY;
+}
+
 sf::Color getPixelFast(const sf::Uint8* pixels, int x, int y, int width)
 {
 	sf::Uint8 r = pixels[(y * width + x) * 4 + 0];
@@ -114,7 +122,7 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t
 			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, map.y);
 
 			// Clear alpha as this is the first pass
-			sf::Uint8 alpha = 0;
+			sf::Uint8 alpha = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
 
 			// Set wall flag and side 
 			BIT_CLEAR(alpha, 0);
@@ -123,6 +131,13 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t
 			BIT_CHANGE(alpha, 7, BIT_CHECK(realSide, 1));
 
 			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
+
+			sf::Vector2f tCoords;
+			tCoords.x = (float)texX / (float)tileWidth;
+			tCoords.y = (float)texY / (float)tileWidth;
+
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
+
 
 			// Write depth buffer
 			depthBuffer[y * width + x] = perpWallDist;
@@ -338,7 +353,30 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 				}
 				else
 				{
+					// Set coordinate X
+					setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, map.x);
+					// Set coordinate Y
+					setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, map.y);
+
+					// Clear alpha as this is the first pass
+					sf::Uint8 alpha = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
+
+					// Set wall flag and side 
+					BIT_CLEAR(alpha, 0);
+					BIT_SET(alpha, 1);
+					BIT_CHANGE(alpha, 6, BIT_CHECK(realSide, 0));
+					BIT_CHANGE(alpha, 7, BIT_CHECK(realSide, 1));
+
+					setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
+
+					sf::Vector2f tCoords;
+					tCoords.x = (float)texX / (float)tileWidth;
+					tCoords.y = (float)texY / (float)tileWidth;
+
+					setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
+
 					setPixelFast(outPixels, x, y, width, color);
+
 					depthBuffer[y * width + x] = realWallDist;
 				}
 			}
@@ -518,7 +556,6 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 
 		sf::Uint8 alpha = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
 
-
 		// Clear wall and sprite flag
 		BIT_CLEAR(alpha, 0);
 		BIT_CLEAR(alpha, 1);
@@ -527,14 +564,17 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		BIT_CLEAR(alpha, 4);
 		BIT_CLEAR(alpha, 5);
 
+		if (currentDist < currentDepthCeiling)
+		{
 
-		// Set coordinate X
-		setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, (int)currentFloor.x);
-		// Set coordinate Y
-		setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, (int)currentFloor.y);
-		// Set flags
-		setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
+			// Set coordinate X
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, (int)currentFloor.x);
+			// Set coordinate Y
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, (int)currentFloor.y);
+			// Set flags
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
 
+		}
 
 		// Mirror (Floor now)
 
@@ -552,20 +592,22 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		}
 
 
-
-		// Set coordinate X
-		setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_G, width, (int)currentFloor.x);
-		// Set coordinate Y
-		setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_B, width, (int)currentFloor.y);
-		// Set flags
-		setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_A, width, alpha);
-
-		// Set depth buffer
-		depthBuffer[y * width + x] = currentDist;
-
-		if (at.ceilingID != 0)
+		if (currentDist < currentDepthFloor)
 		{
-			depthBuffer[(height - y) * width + x] = currentDist;
+			// Set coordinate X
+			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_G, width, (int)currentFloor.x);
+			// Set coordinate Y
+			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_B, width, (int)currentFloor.y);
+			// Set flags
+			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_A, width, alpha);
+
+			// Set depth buffer
+			depthBuffer[y * width + x] = currentDist;
+
+			if (at.ceilingID != 0)
+			{
+				depthBuffer[(height - y) * width + x] = currentDist;
+			}
 		}
 
 	}

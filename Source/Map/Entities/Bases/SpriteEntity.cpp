@@ -1,4 +1,5 @@
 #include "SpriteEntity.h"
+#include "TileEntity.h"
 
 void SpriteEntity::cmdSetSpritePosRot(sf::Vector2f pos, float angle, ENetPeer* peer)
 {
@@ -103,3 +104,5 @@ void SpriteEntity::update(float dt)
 		}
 	}
 }
+
+

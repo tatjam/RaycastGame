@@ -63,6 +63,31 @@ void Entity::emitCommandToAllBut(uint8_t command_id, Packet packet, ENetPeer* ex
 	}
 }
 
+void Entity::onGenericCall(std::string cmd, json args, ENetPeer * peer)
+{
+}
+
+void Entity::sendGenericCall(ENetPeer* peer, std::string cmd, json args)
+{
+	Packet pak;
+	pak.pushString(cmd);
+
+	if (!args.empty())
+	{
+		pak.pushJson(args);
+	}
+
+	if (args.empty())
+	{
+		emitCommand(GENERIC_CALL, pak, peer);
+	}
+	else
+	{
+		emitCommand(GENERIC_CALL_ARGS, pak, peer);
+	}
+	
+}
+
 void Entity::receivePacket(Packet packet, ENetPeer* peer)
 {
 	uint8_t command_id = packet.popByte();
@@ -72,7 +97,17 @@ void Entity::receivePacket(Packet packet, ENetPeer* peer)
 
 void Entity::receiveCommand(uint8_t command_id, Packet packet, ENetPeer* peer)
 {
-
+	if (command_id == GENERIC_CALL)
+	{
+		std::string cmd = packet.popString();
+		onGenericCall(cmd, json(), peer);
+	}
+	else if (command_id == GENERIC_CALL_ARGS)
+	{
+		json j = packet.popJson();
+		std::string cmd = packet.popString();
+		onGenericCall(cmd, j, peer);
+	}
 }
 
 
