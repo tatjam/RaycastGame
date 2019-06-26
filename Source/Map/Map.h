@@ -38,12 +38,12 @@ private:
 	// if we must continue casting the ray
 	// They take a huge ammount of arguments because they are kind of "inlined"
 	// hoping the compiler will actually just copy-paste them into draw
-	bool drawWall(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
+	bool drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
 		sf::Vector2i& map, float& perpWallDist, int& height,
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
 
-	bool drawThin(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
+	bool drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirOverride, sf::Vector2i& step, int& side, int realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir,
 		sf::Vector2i& map, float& perpWallDist, int& height,
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
@@ -51,7 +51,7 @@ private:
 	// always, which is a bit of a perfomance issue
 	// but not too bad as transparency is rare
 	void drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
-		sf::Vector2i& map, float& wallX, float& perpWallDist, int& drawEnd, int& height,
+		sf::Vector2i& map, float& wallX, float& perpWallDist, float distReal, int& drawEnd, int& height,
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
 

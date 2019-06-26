@@ -35,18 +35,11 @@ sf::Uint8 getPixelComponentFast(sf::Uint8* pixels, int x, int y, int component, 
 	return pixels[(y * width + x) * 4 + component];
 }
 
-bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
+bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
 	sf::Vector2i& map, float& perpWallDist, int& height,
 	int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
 {
-	if (side == 0)
-	{
-		perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
-	}
-	else
-	{
-		perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
-	}
+	
 
 	int lineHeight = (int)(height / perpWallDist);
 
@@ -141,22 +134,21 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_
 
 	}
 
-	drawFloorAndCeiling(side, x, pos, rayDir, map, wallX, perpWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+	drawFloorAndCeiling(side, x, pos, rayDir, map, wallX, perpWallDist, perpWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
 
 
 	// Walls always end drawing, they can't be transparent
 	return false;
 }
 
-bool Map::drawThin(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_t& x, sf::Vector2f& pos,
-	sf::Vector2f& rayDir, sf::Vector2i& map, float& perpWallDist, int& height, int& width, 
+bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorOverride,sf::Vector2i& step, int& side, int realSide, size_t& x, sf::Vector2f& pos,
+	sf::Vector2f& rayDir, sf::Vector2f& camDir, sf::Vector2i& map, float& perpWallDist, int& height, int& width, 
 	const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
 {
 	// We don't really need any complex stuff as this is line - straight line intersection
 	// So find the intersection point, find distance, draw column and draw floor / ceiling
 	// Many rays will miss, so this can return true very easily
-	
-	sf::Vector2f rayPos;
+
 
 	// wall indicates the exact position of the ray hit on the "square"
 	// surrounding the thin wall
@@ -173,97 +165,126 @@ bool Map::drawThin(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_
 
 	wall -= floor(wall);
 
-	// NESW
-	if (realSide == 0)
+
+	sf::Vector2f rayPos;
+
+	if (rayOverride.x >= 0.0f && rayOverride.y >= 0.0f)
 	{
-		rayPos.x = wall;
-		rayPos.y = 0.0f;
-	}
-	else if (realSide == 1)
-	{
-		rayPos.x = 1.0f;
-		rayPos.y = wall;
-	}
-	else if (realSide == 2)
-	{
-		rayPos.x = wall;
-		rayPos.y = 1.0f;
+		rayPos = rayOverride;
 	}
 	else
 	{
-		rayPos.x = 0.0f;
-		rayPos.y = wall;
+		// NESW
+		if (realSide == 0)
+		{
+			rayPos.x = wall;
+			rayPos.y = 0.0f;
+		}
+		else if (realSide == 1)
+		{
+			rayPos.x = 1.0f;
+			rayPos.y = wall;
+		}
+		else if (realSide == 2)
+		{
+			rayPos.x = wall;
+			rayPos.y = 1.0f;
+		}
+		else
+		{
+			rayPos.x = 0.0f;
+			rayPos.y = wall;
+		}
 	}
-	// We don't need to handle the limiting case for vertical
-	// lines as these either always hit the thin wall or can't
-	// see it (full sideways vision), so a special solver is used
-	// for that case (TODO)
-	float raySlope;
-	float rayC;
 	
-	// Always, we change the coordinate system to accomodate
-	// for the vertical case
-	float wallSlope = 0.0f;
-	float wallC;
+	sf::Vector2f rayDirector = (rayPos + sf::Vector2f(map.x, map.y)) - pos;
+	if (rayOverride.x >= 0.0f && rayOverride.y >= 0.0f)
+	{
+		rayDirector = rayDirectorOverride;
+	}
 
-	// X-intercept, which may actually be the Y coordinate
-	float xIntercept;
-	float yIntercept;
-
-	// Given the lines y = ax + c and y = dx + e
-	// the intersection point is
-	// x = (d - c) / (a - b), y is solved afterwards
-
-	// To obtain c and e we use
-	// c = y - mx
-	// For the wall c is var2 (the offset along normal)
-	wallC = (float)hit.var2 / 255.0f; 
-	wallC = 0.5f;
-
+	sf::Vector2f wallDirector;
 	if (hit.var0 == 0)
 	{
-		raySlope = rayDir.y / rayDir.x;
-		rayC = rayPos.y - rayPos.x * raySlope;
+		wallDirector = sf::Vector2f(1.0f, 0.0f);
 	}
 	else
 	{
-		// Switch coordinate system
-		raySlope = rayDir.x / rayDir.y;
-		rayC = rayPos.x - rayPos.y * raySlope;
+		wallDirector = sf::Vector2f(0.0f, 1.0f);
 	}
 
-	xIntercept = (wallC - rayC) / (raySlope);
-	yIntercept = wallC;
+	// Ax + By = C, v = (-B, A)
+	sf::Vector3f rayL;
+	rayL.x = rayDirector.y; 
+	rayL.y = -rayDirector.x;
+	rayL.z = rayL.x * rayPos.x + rayL.y * rayPos.y;
 
-	sf::Vector2f actualCoordinate;
+	sf::Vector2f wallP;
 	if (hit.var0 == 0)
 	{
-		actualCoordinate = sf::Vector2f(xIntercept, yIntercept);
+		wallP = sf::Vector2f(0.0f, (float)hit.var2 / 255.0f);
 	}
 	else
 	{
-		actualCoordinate = sf::Vector2f(yIntercept, xIntercept);
+		wallP = sf::Vector2f((float)hit.var2 / 255.0f, 0.0f);
 	}
 
-	if ((actualCoordinate.x < 0.0f || actualCoordinate.x > 1.0f || actualCoordinate.y < 0.0f || actualCoordinate.y > 1.0f) && false)
+	sf::Vector3f wallL;
+	wallL.x = wallDirector.y;
+	wallL.y = wallDirector.x;
+	wallL.z = wallL.x * wallP.x + wallL.y * wallP.y;
+
+	// Cramer's rule
+	float den = (rayL.x * wallL.y - rayL.y * wallL.x);
+	if (den == 0.0f)
+	{
+		// Parallel lines
+		return true;
+	}
+	float xIntercept = (rayL.z * wallL.y - rayL.y * wallL.z) / den;
+	float yIntercept = (rayL.x * wallL.z - rayL.z * wallL.x) / den;
+
+	// xIntercept is on the line rayPos->rayDir, so 
+	// if k is positive it means it's in our front
+	float kX = (xIntercept - rayPos.x) / rayDir.x;
+	float kY = (yIntercept - rayPos.y) / rayDir.y;
+
+	if (kX < 0 || kY < 0)
+	{
+		// We missed the wall
+		return true;
+	}
+
+	float texXDisplace = (((float)hit.var1 / 255.0f) - 0.5f) * 2.0f;
+
+	float minX = 0.0f, minY = 0.0f, maxX = 1.0f, maxY = 1.0f;
+	if (hit.var0 == 0)
+	{
+		minX += texXDisplace;
+		maxX += texXDisplace;
+	}
+	else
+	{
+		minY += texXDisplace;
+		maxY += texXDisplace;
+	}
+
+	minX = std::min(std::max(minX, 0.0f), 1.0f); maxX = std::min(std::max(maxX, 0.0f), 1.0f);
+	minY = std::min(std::max(minY, 0.0f), 1.0f); maxY = std::min(std::max(maxY, 0.0f), 1.0f);
+
+
+	if (xIntercept < minX || xIntercept > maxX || yIntercept < minY || yIntercept > maxY)
 	{
 		// We missed the wall
 		return true;
 	}
 	else
 	{
-		
-		// We hit the wall, proceed to draw
-		if (side == 0)
-		{
-			perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
-		}
-		else
-		{
-			perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
-		}
 
-		int lineHeight = (int)(height / perpWallDist);
+		// Distance is not euler distance but perpendicular distance, projected ontop of the direction vector
+		float realWallDist = std::abs(thor::dotProduct(sf::Vector2f(xIntercept, yIntercept) + sf::Vector2f(map.x, map.y) - pos, camDir));
+
+		int lineHeight = (int)(height / realWallDist);
 
 		int drawStart = (int)(-(float)lineHeight / 2 + height / 2);
 		if (drawStart < 0)
@@ -277,25 +298,71 @@ bool Map::drawThin(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_
 			drawEnd = height - 1;
 		}
 
-		for (size_t y = drawStart; y <= drawEnd; y++)
+		if (drawEnd < drawStart)
 		{
-			sf::Color col = sf::Color::Black;
-			//col.r = actualCoordinate.x * 255.0f;
-			//col.r = rayPos.x * 255.0f;
-			col.r = raySlope * 100.0f;
-
-			setPixelFast(outPixels, x, y, width, col);
+			return true;
 		}
 
-		drawFloorAndCeiling(side, x, pos, rayDir, map, wall, perpWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+		int texX;
+		if (hit.var0 == 0)
+		{
+			texX = (int)(xIntercept * tileWidth);
+		}
+		else
+		{
+			texX = (int)(yIntercept * tileWidth);
+		}
 
-		return false;
+		bool hitTransparent = false;
+
+		for (size_t y = drawStart; y <= drawEnd; y++)
+		{
+			float currentDepth = depthBuffer[y * width + x];
+			if (realWallDist < currentDepth)
+			{
+				int d = y * 256 - (int)height * 128 + lineHeight * 128; // We use these factors to avoid floats
+				int texY = ((d * tileWidth) / lineHeight) / 256;
+
+				//sf::Color color = tileset.getPixel(texX, texY);
+				// We rotate the texture 90º clockwise (change x for y)
+				int texXoff = texXDisplace * tileWidth;
+				if (texXoff >= tileWidth)
+				{
+					texXoff = tileWidth - 1;
+				}
+				sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID - texXoff, tilesetWidth);
+
+				if (color.a < 255)
+				{
+					hitTransparent = true;
+				}
+				else
+				{
+					setPixelFast(outPixels, x, y, width, color);
+					depthBuffer[y * width + x] = realWallDist;
+				}
+			}
+		}
+
+		float realWall = wall;
+		
+		drawFloorAndCeiling(side, x, pos, rayDir, map, realWall, perpWallDist, realWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+
+		if (hitTransparent)
+		{
+			// We must keep going for this column
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 }
 
 void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir, 
-	sf::Vector2i& map, float& wallX, float& perpWallDist, int& drawEnd, int& height, 
+	sf::Vector2i& map, float& wallX, float& perpWallDist, float distShadow, int& drawEnd, int& height, 
 	int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
 {
 	// Draw floor and ceiling
@@ -322,9 +389,8 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		floorWall.y = (float)map.y + 1.0f;
 	}
 
-	float distWall, distPlayer, currentDist;
+	float distWall, currentDist;
 	distWall = perpWallDist;
-	distPlayer = 0.0;
 
 	if (drawEnd < 0)
 	{
@@ -337,7 +403,12 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		float currentDepthCeiling = depthBuffer[(height - y) * width + x];
 
 		currentDist = (float)height / (2.0f * (float)y - (float)height);
-		float weight = (currentDist - distPlayer) / (distWall - distPlayer);
+		float weight = (currentDist) / (distWall);
+		// Shadows, when used with complex wall shapes, break unless we use
+		// the actual, real distance to the wall.
+		// But if we were to use that distance for everything then the ground 
+		// textures appear offset, so this is the solution
+		float weightPlayer = (currentDist) / (distShadow);
 		sf::Vector2f currentFloor;
 		currentFloor.x = weight * floorWall.x + (1.0 - weight) * pos.x;
 		currentFloor.y = weight * floorWall.y + (1.0 - weight) * pos.y;
@@ -346,14 +417,20 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		floorTex.x = int(currentFloor.x * tileWidth) % (int)tileWidth;
 		floorTex.y = int(currentFloor.y * tileWidth) % (int)tileWidth;
 
-		sf::Color reflect = getPixelFast(outPixels, x, drawEnd - (y - drawEnd), width);
 
 		// Add a bit of a shadow
-		float shadow = std::abs(1.0f - weight);
+		float shadow = std::abs(1.0f - weightPlayer);
 
 		shadow = std::max(std::min(shadow, 0.8f), 0.0f);
 		Tile at = getTile((int)currentFloor.x, (int)currentFloor.y);
 		sf::Color color;
+
+		sf::Color reflect;
+
+		if (at.reflectiveFloor || at.reflectiveCeiling)
+		{
+			reflect = getPixelFast(outPixels, x, drawEnd - (y - drawEnd), width);
+		}
 
 		if (currentDist < currentDepthFloor)
 		{
@@ -595,6 +672,17 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 
 		bool run = true;
 
+		if (getTile(map.x, map.y).tileType == Tile::THIN)
+		{
+			sf::Vector2f rayOverride = pos - sf::Vector2f(map.x, map.y);
+			sf::Vector2f rayDirOverride = rayDir;
+
+			// We need to draw it because you can get inside them
+			drawThin(getTile(map.x, map.y), rayOverride, rayDirOverride, step, side, 0, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+		}
+
+
+
 		while (run)
 		{
 			if (sideDist.x < sideDist.y)
@@ -637,13 +725,22 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 				}
 			}
 
+			if (side == 0)
+			{
+				perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
+			}
+			else
+			{
+				perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
+			}
+
 			if (hit.tileType == Tile::WALL)
 			{
 				run = drawWall(hit, step, side, realSide, x, pos, rayDir, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
 			}
 			else if (hit.tileType == Tile::THIN)
 			{
-				run = drawThin(hit, step, side, realSide, x, pos, rayDir, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+				run = drawThin(hit, sf::Vector2f(-1.0f, -1.0f), sf::Vector2f(-1.0f, -1.0f), step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
 			}
 		}
 
@@ -866,7 +963,7 @@ void Map::updateLighting()
 		for (size_t x = 0; x < (size_t)map_width; x++)
 		{
 			Tile* tile = &tiles[y * map_width + x];
-			if (tile->ceilingID == 0 && (tile->transparent || tile->tileType == Tile::EMPTY))
+			if (tile->ceilingID == 0 && (tile->tileType != Tile::WALL))
 			{
 				tile->light = sf::Color(255, 255, 255);
 			}
@@ -902,7 +999,8 @@ void Map::updateLighting()
 				}
 
 				// We only propagate if we are transparent
-				if (tile->transparent || tile->tileType == Tile::EMPTY)
+				// or we are not a full block
+				if (tile->tileType != Tile::WALL)
 				{
 
 					Tile u = Tile(), d = Tile(), r = Tile(), l = Tile();

@@ -67,14 +67,19 @@ void EPlayer::update(float dt)
 				constexpr float SMALL_MULTIPLIER = 0.05f;
 				// We check ahead with a small multiplier
 				sf::Vector2f nextPos = getSprite()->pos + delta * speed * SMALL_MULTIPLIER * 1.5f;
+				sf::Vector2f nextPosSoft = getSprite()->pos + delta * speed * dt;
 
+				Tile next = map->getTile((int)nextPos.x, (int)nextPos.y);
+				Tile actual = map->getTile((int)getSprite()->pos.x, (int)getSprite()->pos.y);
 
-				if (map->getTile((int)nextPos.x, (int)nextPos.y).walkable || noclip)
+				if (next.walkable || noclip)
 				{
 
 				}
 				else
 				{
+
+
 					// This only holds true because we work on a grid!
 					sf::Vector2f currPos = getSprite()->pos;
 					sf::Vector2i currPosRound = sf::Vector2i((int)currPos.x, (int)currPos.y);
@@ -155,7 +160,9 @@ void EPlayer::update(float dt)
 							{
 								// DIE (TODO)
 							}
+
 						}
+
 					}
 					else
 					{
@@ -174,7 +181,10 @@ void EPlayer::update(float dt)
 						getSprite()->pos += wallNormalF * SMALL_MULTIPLIER * simil * dt;
 						deltaPos += wallNormalF * SMALL_MULTIPLIER * simil * dt;
 					}
+				
+
 				}
+
 
 				getSprite()->pos += delta * dt * speed;
 				deltaPos += delta * dt * speed;
@@ -190,6 +200,7 @@ void EPlayer::update(float dt)
 			deltaAngle = 0.0f;
 		}
 	}
+
 
 	sendTimer -= dt;
 }

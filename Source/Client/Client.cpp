@@ -260,6 +260,7 @@ void Client::play()
 		win->clear();
 
 		world.update(dt);
+
 		if (controlledEntityPtr != NULL)
 		{
 			world.map->draw(&target, controlledEntityPtr->getSprite()->pos, controlledEntityPtr->getSprite()->angle, 1.0f);

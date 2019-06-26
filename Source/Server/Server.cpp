@@ -228,7 +228,25 @@ void Server::createDefaultWorld()
 
 			if (x == 5 && y == 5)
 			{
+				world.map->tiles[y * world.map->map_width + x].texID = 8;
 				world.map->tiles[y * world.map->map_width + x].tileType = Tile::THIN;
+				world.map->tiles[y * world.map->map_width + x].var2 = 128;
+				world.map->tiles[y * world.map->map_width + x].var1 = 128;
+				world.map->tiles[y * world.map->map_width + x].var0 = 1;
+				world.map->tiles[y * world.map->map_width + x].walkable = false;
+			}
+
+			if ((x == 5 && y == 4) || (x == 5 && y == 6))
+			{
+				world.map->tiles[y * world.map->map_width + x].texID = 4;
+				world.map->tiles[y * world.map->map_width + x].tileType = Tile::WALL;
+				world.map->tiles[y * world.map->map_width + x].walkable = false;
+			}
+
+
+			if (x % 4 == 0 || y % 4 == 0)
+			{
+				world.map->tiles[y * world.map->map_width + x].floorID = 4;
 			}
 		}
 	}
