@@ -33,6 +33,11 @@ private:
 	int prev_width, prev_height;
 
 	uint16_t spriteUID;
+
+	// All these draw functions return true
+	// if we must continue casting the ray
+	bool drawWall(Tile hit);
+
 public:
 
 	// r = Reserved

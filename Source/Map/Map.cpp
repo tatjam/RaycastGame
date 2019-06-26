@@ -35,6 +35,12 @@ sf::Uint8 getPixelComponentFast(sf::Uint8* pixels, int x, int y, int component, 
 	return pixels[(y * width + x) * 4 + component];
 }
 
+bool Map::drawWall(Tile hit)
+{
+	// Walls always end drawing, they can't be transparent
+	return true;
+}
+
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)
 {
 

@@ -211,7 +211,7 @@ void Server::createDefaultWorld()
 	{
 		for (size_t x = 0; x < world.map->map_width; x++)
 		{
-			if (x > 3 && x < 10 && y > 3 && y < 10)
+			/*if (x > 3 && x < 10 && y > 3 && y < 10)
 			{
 				world.map->tiles[y * world.map->map_width + x].ceilingID = 1;
 			}
@@ -224,7 +224,7 @@ void Server::createDefaultWorld()
 			{
 				world.map->tiles[y * world.map->map_width + x].tileType = Tile::WALL;
 				world.map->tiles[y * world.map->map_width + x].walkable = false;
-			}
+			}*/
 		}
 	}
 }
