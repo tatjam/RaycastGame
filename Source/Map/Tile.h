@@ -11,13 +11,16 @@ struct Tile
 	enum TileType
 	{
 		EMPTY,
+
 		// 1x1 Block
 		WALL,
+
 		// Thin wall
 		// var0 -> 0: X oriented, 1: Y oriented
-		// var1 -> Offset Along direction 0->128
-		// var2 -> Offset Along normal 0->128
+		// var1 -> Offset Along direction 0->255 (0->128 < 0, 128->255 > 0, 0 = 128)
+		// var2 -> Offset Along normal 0->255
 		THIN,
+
 		// A 1x1 column
 		// var0 -> 0: 1x1, 1: 0.5x0.5, 2: 0.25x0.25
 		// Always centered
@@ -29,7 +32,7 @@ struct Tile
 	// Set to true if this use a texture with alpha
 	// as the ray will continue
 	bool transparent;
-	int var0, var1, var2;
+	uint8_t var0, var1, var2;
 
 	bool walkable;
 

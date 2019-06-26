@@ -225,6 +225,11 @@ void Server::createDefaultWorld()
 				world.map->tiles[y * world.map->map_width + x].tileType = Tile::WALL;
 				world.map->tiles[y * world.map->map_width + x].walkable = false;
 			}*/
+
+			if (x == 5 && y == 5)
+			{
+				world.map->tiles[y * world.map->map_width + x].tileType = Tile::THIN;
+			}
 		}
 	}
 }
@@ -247,7 +252,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 2;
+	targetPlayers = 1;
 }
 
 

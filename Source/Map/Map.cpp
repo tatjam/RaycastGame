@@ -35,10 +35,463 @@ sf::Uint8 getPixelComponentFast(sf::Uint8* pixels, int x, int y, int component, 
 	return pixels[(y * width + x) * 4 + component];
 }
 
-bool Map::drawWall(Tile hit)
+bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir,
+	sf::Vector2i& map, float& perpWallDist, int& height,
+	int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
 {
+	if (side == 0)
+	{
+		perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
+	}
+	else
+	{
+		perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
+	}
+
+	int lineHeight = (int)(height / perpWallDist);
+
+	int drawStart = (int)(-(float)lineHeight / 2 + height / 2);
+	if (drawStart < 0)
+	{
+		drawStart = 0;
+	}
+
+	int drawEnd = (int)((float)lineHeight / 2 + height / 2);
+	if (drawEnd >= height)
+	{
+		drawEnd = height - 1;
+	}
+
+
+	float wallX;
+	if (side == 0)
+	{
+		wallX = pos.y + perpWallDist * rayDir.y;
+	}
+	else
+	{
+		wallX = pos.x + perpWallDist * rayDir.x;
+	}
+
+	wallX -= floor(wallX);
+
+	int texX = (int)(wallX * tileWidth);
+	if (side == 0 && rayDir.x > 0)
+	{
+		texX = (int)(tileWidth - texX - 1);
+	}
+
+	if (side == 1 && rayDir.y < 0)
+	{
+		texX = (int)(tileWidth - texX - 1);
+	}
+
+	for (int y = drawStart; y <= drawEnd; y++)
+	{
+		float currentDepth = depthBuffer[y * width + x];
+		if (perpWallDist < currentDepth)
+		{
+			int d = y * 256 - (int)height * 128 + lineHeight * 128; // We use these factors to avoid floats
+			int texY = ((d * tileWidth) / lineHeight) / 256;
+
+			//sf::Color color = tileset.getPixel(texX, texY);
+			// We rotate the texture 90º clockwise (change x for y)
+			sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID, tilesetWidth);
+
+			if (realSide == 0)
+			{
+				color = sf::Color(color.r * ((float)hit.northLight.r / 255.0f), color.g * ((float)hit.northLight.g / 255.0f), color.b * ((float)hit.northLight.b / 255.0f));
+			}
+			else if (realSide == 1)
+			{
+				color = sf::Color(color.r * ((float)hit.eastLight.r / 255.0f), color.g * ((float)hit.eastLight.g / 255.0f), color.b * ((float)hit.eastLight.b / 255.0f));
+			}
+			else if (realSide == 2)
+			{
+				color = sf::Color(color.r * ((float)hit.southLight.r / 255.0f), color.g * ((float)hit.southLight.g / 255.0f), color.b * ((float)hit.southLight.b / 255.0f));
+			}
+			else if (realSide == 3)
+			{
+				color = sf::Color(color.r * ((float)hit.westLight.r / 255.0f), color.g * ((float)hit.westLight.g / 255.0f), color.b * ((float)hit.westLight.b / 255.0f));
+			}
+
+			// Set coordinate X
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, map.x);
+			// Set coordinate Y
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, map.y);
+
+			// Clear alpha as this is the first pass
+			sf::Uint8 alpha = 0;
+
+			// Set wall flag and side 
+			BIT_CLEAR(alpha, 0);
+			BIT_SET(alpha, 1);
+			BIT_CHANGE(alpha, 6, BIT_CHECK(realSide, 0));
+			BIT_CHANGE(alpha, 7, BIT_CHECK(realSide, 1));
+
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
+
+			// Write depth buffer
+			depthBuffer[y * width + x] = perpWallDist;
+
+			//target->setPixel(x, y, color);
+			setPixelFast(outPixels, x, y, width, color);
+		}
+
+
+	}
+
+	drawFloorAndCeiling(side, x, pos, rayDir, map, wallX, perpWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+
+
 	// Walls always end drawing, they can't be transparent
-	return true;
+	return false;
+}
+
+bool Map::drawThin(Tile hit, sf::Vector2i& step, int& side, int& realSide, size_t& x, sf::Vector2f& pos,
+	sf::Vector2f& rayDir, sf::Vector2i& map, float& perpWallDist, int& height, int& width, 
+	const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
+{
+	// We don't really need any complex stuff as this is line - straight line intersection
+	// So find the intersection point, find distance, draw column and draw floor / ceiling
+	// Many rays will miss, so this can return true very easily
+	
+	sf::Vector2f rayPos;
+
+	// wall indicates the exact position of the ray hit on the "square"
+	// surrounding the thin wall
+	float wall;
+
+	if (side == 0)
+	{
+		wall = pos.y + perpWallDist * rayDir.y;
+	}
+	else
+	{
+		wall = pos.x + perpWallDist * rayDir.x;
+	}
+
+	wall -= floor(wall);
+
+	// NESW
+	if (realSide == 0)
+	{
+		rayPos.x = wall;
+		rayPos.y = 0.0f;
+	}
+	else if (realSide == 1)
+	{
+		rayPos.x = 1.0f;
+		rayPos.y = wall;
+	}
+	else if (realSide == 2)
+	{
+		rayPos.x = wall;
+		rayPos.y = 1.0f;
+	}
+	else
+	{
+		rayPos.x = 0.0f;
+		rayPos.y = wall;
+	}
+	// We don't need to handle the limiting case for vertical
+	// lines as these either always hit the thin wall or can't
+	// see it (full sideways vision), so a special solver is used
+	// for that case (TODO)
+	float raySlope;
+	float rayC;
+	
+	// Always, we change the coordinate system to accomodate
+	// for the vertical case
+	float wallSlope = 0.0f;
+	float wallC;
+
+	// X-intercept, which may actually be the Y coordinate
+	float xIntercept;
+	float yIntercept;
+
+	// Given the lines y = ax + c and y = dx + e
+	// the intersection point is
+	// x = (d - c) / (a - b), y is solved afterwards
+
+	// To obtain c and e we use
+	// c = y - mx
+	// For the wall c is var2 (the offset along normal)
+	wallC = (float)hit.var2 / 255.0f; 
+	wallC = 0.5f;
+
+	if (hit.var0 == 0)
+	{
+		raySlope = rayDir.y / rayDir.x;
+		rayC = rayPos.y - rayPos.x * raySlope;
+	}
+	else
+	{
+		// Switch coordinate system
+		raySlope = rayDir.x / rayDir.y;
+		rayC = rayPos.x - rayPos.y * raySlope;
+	}
+
+	xIntercept = (wallC - rayC) / (raySlope);
+	yIntercept = wallC;
+
+	sf::Vector2f actualCoordinate;
+	if (hit.var0 == 0)
+	{
+		actualCoordinate = sf::Vector2f(xIntercept, yIntercept);
+	}
+	else
+	{
+		actualCoordinate = sf::Vector2f(yIntercept, xIntercept);
+	}
+
+	if ((actualCoordinate.x < 0.0f || actualCoordinate.x > 1.0f || actualCoordinate.y < 0.0f || actualCoordinate.y > 1.0f) && false)
+	{
+		// We missed the wall
+		return true;
+	}
+	else
+	{
+		
+		// We hit the wall, proceed to draw
+		if (side == 0)
+		{
+			perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
+		}
+		else
+		{
+			perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
+		}
+
+		int lineHeight = (int)(height / perpWallDist);
+
+		int drawStart = (int)(-(float)lineHeight / 2 + height / 2);
+		if (drawStart < 0)
+		{
+			drawStart = 0;
+		}
+
+		int drawEnd = (int)((float)lineHeight / 2 + height / 2);
+		if (drawEnd >= height)
+		{
+			drawEnd = height - 1;
+		}
+
+		for (size_t y = drawStart; y <= drawEnd; y++)
+		{
+			sf::Color col = sf::Color::Black;
+			//col.r = actualCoordinate.x * 255.0f;
+			//col.r = rayPos.x * 255.0f;
+			col.r = raySlope * 100.0f;
+
+			setPixelFast(outPixels, x, y, width, col);
+		}
+
+		drawFloorAndCeiling(side, x, pos, rayDir, map, wall, perpWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+
+		return false;
+	}
+
+}
+
+void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir, 
+	sf::Vector2i& map, float& wallX, float& perpWallDist, int& drawEnd, int& height, 
+	int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
+{
+	// Draw floor and ceiling
+	sf::Vector2f floorWall;
+
+	if (side == 0 && rayDir.x > 0)
+	{
+		floorWall.x = (float)map.x;
+		floorWall.y = (float)map.y + wallX;
+	}
+	else if (side == 0 && rayDir.x < 0)
+	{
+		floorWall.x = (float)map.x + 1.0f;
+		floorWall.y = (float)map.y + wallX;
+	}
+	else if (side == 1 && rayDir.y > 0)
+	{
+		floorWall.x = (float)map.x + wallX;
+		floorWall.y = (float)map.y;
+	}
+	else
+	{
+		floorWall.x = (float)map.x + wallX;
+		floorWall.y = (float)map.y + 1.0f;
+	}
+
+	float distWall, distPlayer, currentDist;
+	distWall = perpWallDist;
+	distPlayer = 0.0;
+
+	if (drawEnd < 0)
+	{
+		drawEnd = height;
+	}
+
+	for (int y = drawEnd + 1; y < height; y++)
+	{
+		float currentDepthFloor = depthBuffer[y * width + x];
+		float currentDepthCeiling = depthBuffer[(height - y) * width + x];
+
+		currentDist = (float)height / (2.0f * (float)y - (float)height);
+		float weight = (currentDist - distPlayer) / (distWall - distPlayer);
+		sf::Vector2f currentFloor;
+		currentFloor.x = weight * floorWall.x + (1.0 - weight) * pos.x;
+		currentFloor.y = weight * floorWall.y + (1.0 - weight) * pos.y;
+
+		sf::Vector2i floorTex;
+		floorTex.x = int(currentFloor.x * tileWidth) % (int)tileWidth;
+		floorTex.y = int(currentFloor.y * tileWidth) % (int)tileWidth;
+
+		sf::Color reflect = getPixelFast(outPixels, x, drawEnd - (y - drawEnd), width);
+
+		// Add a bit of a shadow
+		float shadow = std::abs(1.0f - weight);
+
+		shadow = std::max(std::min(shadow, 0.8f), 0.0f);
+		Tile at = getTile((int)currentFloor.x, (int)currentFloor.y);
+		sf::Color color;
+
+		if (currentDist < currentDepthFloor)
+		{
+			color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.floorID, tilesetWidth);
+
+			if (at.reflectiveFloor)
+			{
+				float r = reflect.r * (1.0f - shadow) + color.r;
+				float g = reflect.g * (1.0f - shadow) + color.g;
+				float b = reflect.b * (1.0f - shadow) + color.b;
+				if (r > 255.0f) { r = 255.0f; }
+				if (g > 255.0f) { g = 255.0f; }
+				if (b > 255.0f) { b = 255.0f; }
+				color = sf::Color(r, g, b);
+			}
+			else
+			{
+				float newShadow = shadow;
+				if (newShadow >= MAP_SHADOW_FADE)
+				{
+					newShadow = MAP_SHADOW_FADE;
+				}
+
+				newShadow *= 1.0f / MAP_SHADOW_FADE;
+				newShadow += MAP_SHADOW_INTENSE;
+				if (newShadow >= 1.0f)
+				{
+					newShadow = 1.0f;
+				}
+
+				color = sf::Color(color.r * newShadow, color.g * newShadow, color.b * newShadow);
+			}
+
+
+			color = sf::Color(color.r * (at.light.r / 255.0f), color.g * (at.light.g / 255.0f), color.b * (at.light.b / 255.0f));
+
+			setPixelFast(outPixels, x, y, width, color);
+
+		}
+
+		if (currentDist < currentDepthCeiling)
+		{
+			if (at.ceilingID == 0)
+			{
+				// Skybox
+				color = getPixelFast(skyboxPixels, 0, std::min(height - y, (int)skybox.getSize().y - 1), 1);
+			}
+			else
+			{
+				color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.ceilingID, tilesetWidth);
+
+				if (at.reflectiveCeiling)
+				{
+					float r = reflect.r * (1.0f - shadow) + color.r;
+					float g = reflect.g * (1.0f - shadow) + color.g;
+					float b = reflect.b * (1.0f - shadow) + color.b;
+					if (r > 255.0f) { r = 255.0f; }
+					if (g > 255.0f) { g = 255.0f; }
+					if (b > 255.0f) { b = 255.0f; }
+					color = sf::Color(r, g, b);
+				}
+				else
+				{
+					float newShadow = shadow;
+					if (newShadow >= MAP_SHADOW_FADE)
+					{
+						newShadow = MAP_SHADOW_FADE;
+					}
+
+					newShadow *= 1.0f / MAP_SHADOW_FADE;
+					newShadow += MAP_SHADOW_INTENSE;
+					if (newShadow >= 1.0f)
+					{
+						newShadow = 1.0f;
+					}
+
+					color = sf::Color(color.r * newShadow, color.g * newShadow, color.b * newShadow);
+				}
+
+				color = sf::Color(color.r * (at.light.r / 255.0f), color.g * (at.light.g / 255.0f), color.b * (at.light.b / 255.0f));
+			}
+
+			setPixelFast(outPixels, x, height - y, width, color);
+		}
+
+		sf::Uint8 alpha = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
+
+
+		// Clear wall and sprite flag
+		BIT_CLEAR(alpha, 0);
+		BIT_CLEAR(alpha, 1);
+
+		// We are not ceiling
+		BIT_CLEAR(alpha, 4);
+		BIT_CLEAR(alpha, 5);
+
+
+		// Set coordinate X
+		setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, (int)currentFloor.x);
+		// Set coordinate Y
+		setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, (int)currentFloor.y);
+		// Set flags
+		setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
+
+
+		// Mirror (Floor now)
+
+		// Set ceiling
+		BIT_SET(alpha, 5);
+
+		// Set skybox flag
+		if (at.ceilingID == 0)
+		{
+			BIT_SET(alpha, 4);
+		}
+		else
+		{
+			BIT_CLEAR(alpha, 4);
+		}
+
+
+
+		// Set coordinate X
+		setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_G, width, (int)currentFloor.x);
+		// Set coordinate Y
+		setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_B, width, (int)currentFloor.y);
+		// Set flags
+		setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_A, width, alpha);
+
+		// Set depth buffer
+		depthBuffer[y * width + x] = currentDist;
+
+		if (at.ceilingID != 0)
+		{
+			depthBuffer[(height - y) * width + x] = currentDist;
+		}
+
+	}
 }
 
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)
@@ -140,7 +593,9 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 			sideDist.y = (map.y + 1.0f - pos.y) * deltaDist.y;
 		}
 
-		while (hit.tileType == Tile::EMPTY)
+		bool run = true;
+
+		while (run)
 		{
 			if (sideDist.x < sideDist.y)
 			{
@@ -156,330 +611,43 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 			}
 
 			hit = getTile(map.x, map.y);
-		}
 
-		if (side == 0)
-		{
-			perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
-		}
-		else
-		{
-			perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
-		}
-
-		int lineHeight = (int)(height / perpWallDist);
-
-		int drawStart = (int)(-(float)lineHeight / 2 + height / 2);
-		if (drawStart < 0)
-		{
-			drawStart = 0;
-		}
-
-		int drawEnd = (int)((float)lineHeight / 2 + height / 2);
-		if (drawEnd >= height)
-		{
-			drawEnd = height - 1;
-		}
-
-
-		float wallX;
-		if (side == 0)
-		{
-			wallX = pos.y + perpWallDist * rayDir.y;
-		}
-		else
-		{
-			wallX = pos.x + perpWallDist * rayDir.x;
-		}
-
-		wallX -= floor(wallX);
-
-		// 0 = N, 1 = E, 2 = S, 3 = W
-		int realSide = 0;
-		if (side == 1)
-		{
-			if (rayDir.y >= 0)
+			int realSide = 0;
+			if (side == 1)
 			{
-				realSide = 0;
-			}
-			else
-			{
-				realSide = 2;
-			}
-		}
-
-		if (side == 0)
-		{
-			if (rayDir.x >= 0)
-			{
-				realSide = 3;
-			}
-			else
-			{
-				realSide = 1;
-			}
-		}
-
-		int texX = (int)(wallX * tileWidth);
-		if (side == 0 && rayDir.x > 0)
-		{
-			texX = (int)(tileWidth - texX - 1);
-		}
-
-		if (side == 1 && rayDir.y < 0)
-		{
-			texX = (int)(tileWidth - texX - 1);
-		}
-
-		for (int y = drawStart; y <= drawEnd; y++)
-		{
-			float currentDepth = depthBuffer[y * width + x];
-			if (perpWallDist < currentDepth)
-			{
-				int d = y * 256 - (int)height * 128 + lineHeight * 128; // We use these factors to avoid floats
-				int texY = ((d * tileWidth) / lineHeight) / 256;
-
-				//sf::Color color = tileset.getPixel(texX, texY);
-				// We rotate the texture 90º clockwise (change x for y)
-				sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID, tilesetWidth);
-
-				if (realSide == 0)
+				if (rayDir.y >= 0)
 				{
-					color = sf::Color(color.r * ((float)hit.northLight.r / 255.0f), color.g * ((float)hit.northLight.g / 255.0f), color.b * ((float)hit.northLight.b / 255.0f));
-				}
-				else if (realSide == 1)
-				{
-					color = sf::Color(color.r * ((float)hit.eastLight.r / 255.0f), color.g * ((float)hit.eastLight.g / 255.0f), color.b * ((float)hit.eastLight.b / 255.0f));
-				}
-				else if (realSide == 2)
-				{
-					color = sf::Color(color.r * ((float)hit.southLight.r / 255.0f), color.g * ((float)hit.southLight.g / 255.0f), color.b * ((float)hit.southLight.b / 255.0f));
-				}
-				else if (realSide == 3)
-				{
-					color = sf::Color(color.r * ((float)hit.westLight.r / 255.0f), color.g * ((float)hit.westLight.g / 255.0f), color.b * ((float)hit.westLight.b / 255.0f));
-				}
-
-				// Set coordinate X
-				setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, map.x);
-				// Set coordinate Y
-				setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, map.y);
-
-				// Clear alpha as this is the first pass
-				sf::Uint8 alpha = 0;
-
-				// Set wall flag and side 
-				BIT_CLEAR(alpha, 0);
-				BIT_SET(alpha, 1);
-				BIT_CHANGE(alpha, 6, BIT_CHECK(realSide, 0));
-				BIT_CHANGE(alpha, 7, BIT_CHECK(realSide, 1));
-
-				setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
-
-				// Write depth buffer
-				depthBuffer[y * width + x] = perpWallDist;
-
-				//target->setPixel(x, y, color);
-				setPixelFast(outPixels, x, y, width, color);
-			}
-
-
-		}
-
-		// Draw floor and ceiling
-		sf::Vector2f floorWall;
-
-		if (side == 0 && rayDir.x > 0)
-		{
-			floorWall.x = (float)map.x;
-			floorWall.y = (float)map.y + wallX;
-		}
-		else if (side == 0 && rayDir.x < 0)
-		{
-			floorWall.x = (float)map.x + 1.0f;
-			floorWall.y = (float)map.y + wallX;
-		}
-		else if (side == 1 && rayDir.y > 0)
-		{
-			floorWall.x = (float)map.x + wallX;
-			floorWall.y = (float)map.y;
-		}
-		else
-		{
-			floorWall.x = (float)map.x + wallX;
-			floorWall.y = (float)map.y + 1.0f;
-		}
-
-		float distWall, distPlayer, currentDist;
-		distWall = perpWallDist;
-		distPlayer = 0.0;
-
-		if (drawEnd < 0)
-		{
-			drawEnd = height;
-		}
-
-		for (int y = drawEnd + 1; y < height; y++)
-		{
-			float currentDepthFloor = depthBuffer[y * width + x];
-			float currentDepthCeiling = depthBuffer[(height - y) * width + x];
-
-			currentDist = (float)height / (2.0f * (float)y - (float)height);
-			float weight = (currentDist - distPlayer) / (distWall - distPlayer);
-			sf::Vector2f currentFloor;
-			currentFloor.x = weight * floorWall.x + (1.0 - weight) * pos.x;
-			currentFloor.y = weight * floorWall.y + (1.0 - weight) * pos.y;
-			
-			sf::Vector2i floorTex;
-			floorTex.x = int(currentFloor.x * tileWidth) % (int)tileWidth;
-			floorTex.y = int(currentFloor.y * tileWidth) % (int)tileWidth;
-
-			sf::Color reflect = getPixelFast(outPixels, x, drawEnd - (y - drawEnd), width);
-
-			// Add a bit of a shadow
-			float shadow = std::abs(1.0f - weight);
-
-			shadow = std::max(std::min(shadow, 0.8f), 0.0f);
-			Tile at = getTile((int)currentFloor.x, (int)currentFloor.y);
-			sf::Color color;
-
-			if (currentDist < currentDepthFloor)
-			{
-				color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.floorID, tilesetWidth);
-
-				if (at.reflectiveFloor)
-				{
-					float r = reflect.r * (1.0f - shadow) + color.r;
-					float g = reflect.g * (1.0f - shadow) + color.g;
-					float b = reflect.b * (1.0f - shadow) + color.b;
-					if (r > 255.0f) { r = 255.0f; }
-					if (g > 255.0f) { g = 255.0f; }
-					if (b > 255.0f) { b = 255.0f; }
-					color = sf::Color(r, g, b);
+					realSide = 0;
 				}
 				else
 				{
-					float newShadow = shadow;
-					if (newShadow >= MAP_SHADOW_FADE)
-					{
-						newShadow = MAP_SHADOW_FADE;
-					}
-
-					newShadow *= 1.0f / MAP_SHADOW_FADE;
-					newShadow += MAP_SHADOW_INTENSE;
-					if (newShadow >= 1.0f)
-					{
-						newShadow = 1.0f;
-					}
-
-					color = sf::Color(color.r * newShadow, color.g * newShadow, color.b * newShadow);
+					realSide = 2;
 				}
-
-
-				color = sf::Color(color.r * (at.light.r / 255.0f), color.g * (at.light.g / 255.0f), color.b * (at.light.b / 255.0f));
-
-				setPixelFast(outPixels, x, y, width, color);
-
 			}
 
-			if (currentDist < currentDepthCeiling)
+			if (side == 0)
 			{
-				if (at.ceilingID == 0)
+				if (rayDir.x >= 0)
 				{
-					// Skybox
-					color = getPixelFast(skyboxPixels, 0, std::min(height - y, (int)skybox.getSize().y - 1), 1);
+					realSide = 3;
 				}
 				else
 				{
-					color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.ceilingID, tilesetWidth);
-
-					if (at.reflectiveCeiling)
-					{
-						float r = reflect.r * (1.0f - shadow) + color.r;
-						float g = reflect.g * (1.0f - shadow) + color.g;
-						float b = reflect.b * (1.0f - shadow) + color.b;
-						if (r > 255.0f) { r = 255.0f; }
-						if (g > 255.0f) { g = 255.0f; }
-						if (b > 255.0f) { b = 255.0f; }
-						color = sf::Color(r, g, b);
-					}
-					else
-					{
-						float newShadow = shadow;
-						if (newShadow >= MAP_SHADOW_FADE)
-						{
-							newShadow = MAP_SHADOW_FADE;
-						}
-
-						newShadow *= 1.0f / MAP_SHADOW_FADE;
-						newShadow += MAP_SHADOW_INTENSE;
-						if (newShadow >= 1.0f)
-						{
-							newShadow = 1.0f;
-						}
-
-						color = sf::Color(color.r * newShadow, color.g * newShadow, color.b * newShadow);
-					}
-
-					color = sf::Color(color.r * (at.light.r / 255.0f), color.g * (at.light.g / 255.0f), color.b * (at.light.b / 255.0f));
+					realSide = 1;
 				}
-
-				setPixelFast(outPixels, x, height - y, width, color);
 			}
 
-			sf::Uint8 alpha = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
-
-
-			// Clear wall and sprite flag
-			BIT_CLEAR(alpha, 0);
-			BIT_CLEAR(alpha, 1);
-
-			// We are not ceiling
-			BIT_CLEAR(alpha, 4);
-			BIT_CLEAR(alpha, 5);
-
-
-			// Set coordinate X
-			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, (int)currentFloor.x);
-			// Set coordinate Y
-			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, (int)currentFloor.y);
-			// Set flags
-			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
-
-
-			// Mirror (Floor now)
-
-			// Set ceiling
-			BIT_SET(alpha, 5);
-
-			// Set skybox flag
-			if (at.ceilingID == 0)
+			if (hit.tileType == Tile::WALL)
 			{
-				BIT_SET(alpha, 4);
+				run = drawWall(hit, step, side, realSide, x, pos, rayDir, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
 			}
-			else
+			else if (hit.tileType == Tile::THIN)
 			{
-				BIT_CLEAR(alpha, 4);
+				run = drawThin(hit, step, side, realSide, x, pos, rayDir, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
 			}
-
-
-
-			// Set coordinate X
-			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_G, width, (int)currentFloor.x);
-			// Set coordinate Y
-			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_B, width, (int)currentFloor.y);
-			// Set flags
-			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_A, width, alpha);
-
-			// Set depth buffer
-			depthBuffer[y * width + x] = currentDist;
-
-			if (at.ceilingID != 0)
-			{
-				depthBuffer[(height - y) * width + x] = currentDist;
-			}
-
 		}
+
+
 	}
 
 	// Draw sprites
