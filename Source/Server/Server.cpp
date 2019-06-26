@@ -206,6 +206,27 @@ void Server::mainFunc(int argc, char** argv)
 void Server::createDefaultWorld()
 {
 	world.map = new Map(16, 32);
+
+	for (size_t y = 0; y < world.map->map_height; y++)
+	{
+		for (size_t x = 0; x < world.map->map_width; x++)
+		{
+			if (x > 3 && x < 10 && y > 3 && y < 10)
+			{
+				world.map->tiles[y * world.map->map_width + x].ceilingID = 1;
+			}
+			else 
+			{
+				world.map->tiles[y * world.map->map_width + x].floorID = 5;
+			}
+
+			if ((x == 3 || x == 10 || y == 3 || y == 10) && (x >= 3 && x <= 10 && y >= 3 && y <= 10) && !(x == 3 && y == 5))
+			{
+				world.map->tiles[y * world.map->map_width + x].tileType = Tile::WALL;
+				world.map->tiles[y * world.map->map_width + x].walkable = false;
+			}
+		}
+	}
 }
 
 void Server::downloadTo(ConnectedClient* target)

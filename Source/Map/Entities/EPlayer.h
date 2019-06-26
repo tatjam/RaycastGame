@@ -2,7 +2,7 @@
 #include "Bases/SpriteEntity.h"
 
 // 20 packets per second
-#define EPLAYER_NETFRAMERATE 5
+#define EPLAYER_NETFRAMERATE 8
 #define EPLAYER_NETUPDATE (1.0f / EPLAYER_NETFRAMERATE)
 
 #define EPLAYER_MAX_DELTA_POS 0.05f
@@ -10,6 +10,9 @@
 
 class EPlayer : public SpriteEntity
 {
+private:
+	bool noclip;
+
 public:
 
 	// Used to limit the ammount of information we send
@@ -24,7 +27,7 @@ public:
 	virtual void update(float dt) override;
 	virtual void start() override;
 
-	EPlayer(ProgramType* prog, uint32_t uid) : SpriteEntity(prog, uid) { sendTimer = EPLAYER_NETUPDATE; }
+	EPlayer(ProgramType* prog, uint32_t uid) : SpriteEntity(prog, uid) { sendTimer = EPLAYER_NETUPDATE; noclip = false; }
 	~EPlayer();
 };
 

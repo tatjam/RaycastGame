@@ -11,7 +11,7 @@ void Client::mainFunc(int argc, char** argv)
 	// Try to get IP to conncet to
 	if (argc >= 3)
 	{
-		std::string as_str = argv[3];
+		std::string as_str = argv[2];
 		ip = as_str;
 	}
 
@@ -181,7 +181,7 @@ void Client::play()
 	// Mouse coordinates in scaled space
 	// Used for picking
 	sf::Vector2i gameMouseCoords;
-	bool mouseInGame;
+	bool mouseInGame = false;
 
 	sf::Text debugText = sf::Text();
 	debugText.setFont(font);
@@ -266,8 +266,8 @@ void Client::play()
 
 			targetTex.loadFromImage(target);
 			targetSpr.setTexture(targetTex);
-			targetSpr.setScale(screenScale, screenScale);
-			targetSpr.setPosition(0, topUiHeight);
+			targetSpr.setScale((float)screenScale, (float)screenScale);
+			targetSpr.setPosition(0, (float)topUiHeight);
 
 			win->draw(targetSpr);
 

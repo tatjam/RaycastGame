@@ -31,6 +31,8 @@ struct Tile
 	bool transparent;
 	int var0, var1, var2;
 
+	bool walkable;
+
 	int floorID;
 	// 0 here means skybox (TODO
 	int ceilingID;
@@ -60,6 +62,7 @@ struct Tile
 		floorID = 0; ceilingID = 0;
 		reflectiveFloor = false; reflectiveCeiling = false;
 		linked_entity = 0;
+		walkable = true;
 	}
 
 	json serialize();

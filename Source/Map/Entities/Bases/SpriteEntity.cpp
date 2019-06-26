@@ -75,7 +75,7 @@ void SpriteEntity::start()
 		sprite.frame = 0;
 	}
 
-	sprite.pos = sf::Vector2f(5.0f, 5.0f);
+	sprite.pos = sf::Vector2f(4.5f, 3.5f);
 	wantedPos = sprite.pos;
 	oldPos = sprite.pos;
 

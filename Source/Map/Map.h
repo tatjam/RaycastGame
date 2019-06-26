@@ -7,7 +7,7 @@
 #include "Tile.h"
 
 #ifndef PI
-#define PI 3.14159265358979323
+#define PI 3.14159265358979323f
 #endif
 
 #define MAP_SHADOW_FADE 0.4f
@@ -59,7 +59,7 @@ public:
 
 	sf::Image tileset;
 	sf::Image skybox;
-	float tileWidth;
+	int tileWidth;
 
 
 

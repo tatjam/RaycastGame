@@ -97,7 +97,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		float cameraX = (float)(2 * x / (float)width) - 1;
 		sf::Vector2f rayDir = direction * viewPlaneDist + screenPlane * cameraX;
 		
-		sf::Vector2i map = sf::Vector2i(pos.x, pos.y);
+		sf::Vector2i map = sf::Vector2i((int)pos.x, (int)pos.y);
 
 		sf::Vector2f sideDist;
 
@@ -120,7 +120,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		else
 		{
 			step.x = 1;
-			sideDist.x = (map.x + 1.0 - pos.x) * deltaDist.x;
+			sideDist.x = (map.x + 1.0f - pos.x) * deltaDist.x;
 		}
 
 		if (rayDir.y < 0)
@@ -131,7 +131,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		else
 		{
 			step.y = 1;
-			sideDist.y = (map.y + 1.0 - pos.y) * deltaDist.y;
+			sideDist.y = (map.y + 1.0f - pos.y) * deltaDist.y;
 		}
 
 		while (hit.tileType == Tile::EMPTY)
@@ -163,13 +163,13 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 
 		int lineHeight = (int)(height / perpWallDist);
 
-		int drawStart = -(float)lineHeight / 2 + height / 2;
+		int drawStart = (int)(-(float)lineHeight / 2 + height / 2);
 		if (drawStart < 0)
 		{
 			drawStart = 0;
 		}
 
-		int drawEnd = (float)lineHeight / 2 + height / 2;
+		int drawEnd = (int)((float)lineHeight / 2 + height / 2);
 		if (drawEnd >= height)
 		{
 			drawEnd = height - 1;
@@ -217,12 +217,12 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		int texX = (int)(wallX * tileWidth);
 		if (side == 0 && rayDir.x > 0)
 		{
-			texX = tileWidth - texX - 1;
+			texX = (int)(tileWidth - texX - 1);
 		}
 
 		if (side == 1 && rayDir.y < 0)
 		{
-			texX = tileWidth - texX - 1;
+			texX = (int)(tileWidth - texX - 1);
 		}
 
 		for (int y = drawStart; y <= drawEnd; y++)
@@ -234,8 +234,8 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 				int texY = ((d * tileWidth) / lineHeight) / 256;
 
 				//sf::Color color = tileset.getPixel(texX, texY);
-				// We rotate the texture 90º clockwise (change x for y) and invert x (would be y)
-				sf::Color color = getPixelFast(tilesetPixels, tileWidth - texY, texX + tileWidth * hit.texID, tilesetWidth);
+				// We rotate the texture 90º clockwise (change x for y)
+				sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID, tilesetWidth);
 
 				if (realSide == 0)
 				{
@@ -285,23 +285,23 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 
 		if (side == 0 && rayDir.x > 0)
 		{
-			floorWall.x = map.x;
-			floorWall.y = map.y + wallX;
+			floorWall.x = (float)map.x;
+			floorWall.y = (float)map.y + wallX;
 		}
 		else if (side == 0 && rayDir.x < 0)
 		{
-			floorWall.x = map.x + 1.0;
-			floorWall.y = map.y + wallX;
+			floorWall.x = (float)map.x + 1.0f;
+			floorWall.y = (float)map.y + wallX;
 		}
 		else if (side == 1 && rayDir.y > 0)
 		{
-			floorWall.x = map.x + wallX;
-			floorWall.y = map.y;
+			floorWall.x = (float)map.x + wallX;
+			floorWall.y = (float)map.y;
 		}
 		else
 		{
-			floorWall.x = map.x + wallX;
-			floorWall.y = map.y + 1.0;
+			floorWall.x = (float)map.x + wallX;
+			floorWall.y = (float)map.y + 1.0f;
 		}
 
 		float distWall, distPlayer, currentDist;
@@ -334,7 +334,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 			float shadow = std::abs(1.0f - weight);
 
 			shadow = std::max(std::min(shadow, 0.8f), 0.0f);
-			Tile at = getTile(currentFloor.x, currentFloor.y);
+			Tile at = getTile((int)currentFloor.x, (int)currentFloor.y);
 			sf::Color color;
 
 			if (currentDist < currentDepthFloor)
@@ -506,7 +506,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		// Vertical
 		int spriteHeight = std::abs((int)((float)height / transform.y));
 
-		int vMoveScreen = (sprites[i]->vOffset * imgHeight) / transform.y;
+		int vMoveScreen = (int)((sprites[i]->vOffset * imgHeight) / transform.y);
 
 
 		int drawStartY = -spriteHeight / 2 + height / 2 + vMoveScreen;
@@ -675,6 +675,7 @@ Tile Map::getTile(int x, int y)
 	if (x < 0 || y < 0 || x >= map_width || y >= map_height)
 	{
 		out.tileType = Tile::WALL;
+		out.walkable = false;
 		return out;
 	}
 	else
@@ -686,9 +687,9 @@ Tile Map::getTile(int x, int y)
 void Map::updateLighting()
 {
 	// Delete all lights and apply skylight
-	for (size_t y = 0; y < map_height; y++)
+	for (size_t y = 0; y < (size_t)map_height; y++)
 	{
-		for (size_t x = 0; x < map_width; x++)
+		for (size_t x = 0; x < (size_t)map_width; x++)
 		{
 			Tile* tile = &tiles[y * map_width + x];
 			if (tile->ceilingID == 0 && (tile->transparent || tile->tileType == Tile::EMPTY))
@@ -715,9 +716,9 @@ void Map::updateLighting()
 	// Propagate
 	for (size_t i = 0; i < MAP_LIGHT_PROPAGATION; i++)
 	{
-		for (size_t y = 0; y < map_height; y++)
+		for (size_t y = 0; y < (size_t)map_height; y++)
 		{
-			for (size_t x = 0; x < map_width; x++)
+			for (size_t x = 0; x < (size_t)map_width; x++)
 			{
 
 				Tile* tile = &tiles[y * map_width + x];
@@ -736,12 +737,12 @@ void Map::updateLighting()
 					{
 						u = tiles[(y - 1) * map_width + (x + 0)];
 					}
-					if (y < map_height - 1)
+					if (y < (size_t)map_height - 1)
 					{
 						d = tiles[(y + 1) * map_width + (x + 0)];
 					}
 
-					if (x < map_width - 1)
+					if (x < (size_t)map_width - 1)
 					{
 						r = tiles[(y + 0) * map_width + (x + 1)];
 					}
@@ -808,9 +809,9 @@ void Map::updateLighting()
 			}
 		}
 
-		for (size_t y = 0; y < map_height; y++)
+		for (size_t y = 0; y < (size_t)map_height; y++)
 		{
-			for (size_t x = 0; x < map_width; x++)
+			for (size_t x = 0; x < (size_t)map_width; x++)
 			{
 				Tile* tile = &tiles[y * map_width + x];
 				tile->prevLight = tile->light;
@@ -819,9 +820,9 @@ void Map::updateLighting()
 	}
 	// Apply into walls
 
-	for (size_t y = 0; y < map_height; y++)
+	for (size_t y = 0; y < (size_t)map_height; y++)
 	{
-		for (size_t x = 0; x < map_width; x++)
+		for (size_t x = 0; x < (size_t)map_width; x++)
 		{
 			Tile* tile = &tiles[y * map_width + x];
 			tile->prevLight = tile->light;
@@ -832,12 +833,12 @@ void Map::updateLighting()
 			{
 				u = tiles[(y - 1) * map_width + (x + 0)];
 			}
-			if (y < map_height - 1)
+			if (y < (size_t)map_height - 1)
 			{
 				d = tiles[(y + 1) * map_width + (x + 0)];
 			}
 
-			if (x < map_width - 1)
+			if (x < (size_t)map_width - 1)
 			{
 				r = tiles[(y + 0) * map_width + (x + 1)];
 			}
@@ -864,7 +865,33 @@ void Map::update(float dt, bool lighting)
 	}
 }
 
+sf::Image rotate90(sf::Image* original)
+{
+	sf::Image out;
+	size_t orWidth = original->getSize().x;
+	size_t orHeight = original->getSize().y;
+	sf::Uint8* pixels = (sf::Uint8*)malloc(orWidth * orHeight * 4 * sizeof(sf::Uint8));
+	const sf::Uint8* orPixels = original->getPixelsPtr();
 
+	for (size_t orY = 0; orY < orHeight; orY++)
+	{
+		for (size_t orX = 0; orX < orWidth; orX++)
+		{
+			// To rotate we change x for y
+			size_t x = orY;
+			size_t y = orX;
+
+			pixels[(y * orHeight + x) * 4 + 0] = orPixels[(orY * orWidth + orX) * 4 + 0];
+			pixels[(y * orHeight + x) * 4 + 1] = orPixels[(orY * orWidth + orX) * 4 + 1];
+			pixels[(y * orHeight + x) * 4 + 2] = orPixels[(orY * orWidth + orX) * 4 + 2];
+			pixels[(y * orHeight + x) * 4 + 3] = orPixels[(orY * orWidth + orX) * 4 + 3];
+		}
+	}
+
+	out.create(orHeight, orWidth, pixels);
+	free(pixels);
+	return out;
+}
 
 Map::Map(size_t width, size_t height)
 {
@@ -873,27 +900,27 @@ Map::Map(size_t width, size_t height)
 
 	tiles.resize(width * height, Tile());
 
-	tileset.loadFromFile("Assets/tileset.png");
+	sf::Image tilesetBuff;
+	tilesetBuff.loadFromFile("Assets/tileset.png");
+
+	tileset = rotate90(&tilesetBuff);
+
 	tileWidth = tileset.getSize().x;
 	
+
 	skybox.loadFromFile("Assets/skybox.png");
 
-	for (size_t y = 0; y < map_height; y++)
+	// We give some edges to the world
+	for (size_t y = 0; y < (size_t)map_height; y++)
 	{
-		for (size_t x = 0; x < map_width; x++)
+		for (size_t x = 0; x < (size_t)map_width; x++)
 		{
-			/*if (x % 4 == 0 || y % 4 == 0 || x >= 20)
-			{
-				tiles[y * map_width + x].ceilingID = 1;
-			}*/
-
-			if (x == 0 || y == 0 || y >= map_height - 1 || x >= map_width - 1)
+			if (x == 0 || y == 0 || y >= (size_t)map_height - 1 || x >= (size_t)map_width - 1)
 			{
 				tiles[y * map_width + x].tileType = Tile::WALL;
 				tiles[y * map_width + x].texID = 6;
+				tiles[y * map_width + x].walkable = false;
 			}
-
-			tiles[y * map_width + x].floorID = 4;
 		}
 	}
 
@@ -933,7 +960,7 @@ void Map::deserialize(json data)
 
 	tiles.resize(map_width * map_height);
 
-	for (size_t i = 0; i < map_width * map_height; i++)
+	for (size_t i = 0; i < (size_t)map_width * (size_t)map_height; i++)
 	{
 		tiles[i].deserialize(data["tiles"][i]);
 	}
@@ -953,6 +980,7 @@ json Tile::serialize()
 	root["ceilingID"] = ceilingID;
 	root["reflectiveCeiling"] = reflectiveCeiling;
 	root["reflectiveFloor"] = reflectiveFloor;
+	root["walkable"] = walkable;
 
 	// Lights don't need to be included, they are computed
 	// Neither do entities as these add themselves to a tile
@@ -974,4 +1002,5 @@ void Tile::deserialize(json data)
 	ceilingID = data["ceilingID"];
 	reflectiveCeiling = data["reflectiveCeiling"];
 	reflectiveFloor = data["reflectiveFloor"];
+	walkable = data["walkable"];
 }
