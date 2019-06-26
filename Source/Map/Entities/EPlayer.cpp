@@ -13,17 +13,61 @@ void EPlayer::update(float dt)
 
 		if (getProg()->getWindow()->hasFocus() && isControlled())
 		{
-
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab))
 			{
-				getSprite()->angle -= PI * 1.2f * dt;
-				deltaAngle += PI * 1.2f * dt;
+				if (!wasTabPressed)
+				{
+					inFPSControl = !inFPSControl;
+				}
+
+				wasTabPressed = true;
+			}
+			else
+			{
+				wasTabPressed = false;
 			}
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			if (inFPSControl)
 			{
-				getSprite()->angle += PI * 1.2f * dt;
-				deltaAngle += PI * 1.2f * dt;
+				getProg()->getWindow()->setMouseCursorGrabbed(true);
+				getProg()->getWindow()->setMouseCursorVisible(false);
+				
+	
+				sf::Vector2i mouseNow = sf::Mouse::getPosition(*getProg()->getWindow());
+				sf::Vector2i mouseDelta = mouseNow - mousePrev;
+
+				float angleChange = (float)mouseDelta.x * 0.001f;
+				getSprite()->angle += angleChange;
+				deltaAngle += angleChange;
+
+				sf::Vector2u mousePos = getProg()->getWindow()->getSize() / 2U;
+				sf::Vector2i mousePosi = sf::Vector2i(mousePos.x, mousePos.y);
+
+				sf::Mouse::setPosition(mousePosi, *getProg()->getWindow());
+
+				mousePrev = mousePosi;
+
+
+
+
+			}
+			else
+			{
+				getProg()->getWindow()->setMouseCursorGrabbed(false);
+				getProg()->getWindow()->setMouseCursorVisible(true);
+
+
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+				{
+					getSprite()->angle -= PI * 1.2f * dt;
+					deltaAngle += PI * 1.2f * dt;
+				}
+
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+				{
+					getSprite()->angle += PI * 1.2f * dt;
+					deltaAngle += PI * 1.2f * dt;
+				}
 			}
 
 			sf::Vector2f dir; dir.x = sin(getSprite()->angle); dir.y = cos(getSprite()->angle);

@@ -8,12 +8,26 @@
 #define EPLAYER_MAX_DELTA_POS 0.05f
 #define EPLAYER_MAX_DELTA_ANGLE (PI / 4.5f)
 
+
 class EPlayer : public SpriteEntity
 {
 private:
 	bool noclip;
 
+	sf::Vector2f inputs;
+	float angleInput;
+
+	sf::Vector2i mousePrev;
+
+	bool wasTabPressed;
+
 public:
+
+	// Used when in FPS control to know how high are we looking
+	float aimElevation;
+
+	// Are we using FPS controls or aim-and-click controls?
+	bool inFPSControl;
 
 	// Used to limit the ammount of information we send
 	sf::Vector2f deltaPos;
