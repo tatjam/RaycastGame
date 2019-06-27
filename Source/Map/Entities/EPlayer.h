@@ -8,7 +8,7 @@
 #define EPLAYER_MAX_DELTA_POS 0.05f
 #define EPLAYER_MAX_DELTA_ANGLE (PI / 4.5f)
 
-
+// TODO: Control methods
 class EPlayer : public SpriteEntity
 {
 private:
@@ -24,6 +24,8 @@ private:
 public:
 
 	// Used when in FPS control to know how high are we looking
+	// Not synchronized at all
+	// 0 = top of screen, 1 = bottom of screen
 	float aimElevation;
 
 	// Are we using FPS controls or aim-and-click controls?

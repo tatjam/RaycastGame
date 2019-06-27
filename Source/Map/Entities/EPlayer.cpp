@@ -18,6 +18,8 @@ void EPlayer::update(float dt)
 				if (!wasTabPressed)
 				{
 					inFPSControl = !inFPSControl;
+					sf::Vector2u mousePos = getProg()->getWindow()->getSize() / 2U;
+					mousePrev = sf::Vector2i(mousePos.x, mousePos.y);
 				}
 
 				wasTabPressed = true;
@@ -36,9 +38,11 @@ void EPlayer::update(float dt)
 				sf::Vector2i mouseNow = sf::Mouse::getPosition(*getProg()->getWindow());
 				sf::Vector2i mouseDelta = mouseNow - mousePrev;
 
-				float angleChange = (float)mouseDelta.x * 0.001f;
+				float angleChange = (float)mouseDelta.x * 0.0022f;
 				getSprite()->angle += angleChange;
 				deltaAngle += angleChange;
+
+				aimElevation += (float)mouseDelta.y * 0.003f;
 
 				sf::Vector2u mousePos = getProg()->getWindow()->getSize() / 2U;
 				sf::Vector2i mousePosi = sf::Vector2i(mousePos.x, mousePos.y);
@@ -48,27 +52,24 @@ void EPlayer::update(float dt)
 				mousePrev = mousePosi;
 
 
-
-
 			}
 			else
 			{
 				getProg()->getWindow()->setMouseCursorGrabbed(false);
 				getProg()->getWindow()->setMouseCursorVisible(true);
-
-
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-				{
-					getSprite()->angle -= PI * 1.2f * dt;
-					deltaAngle += PI * 1.2f * dt;
-				}
-
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-				{
-					getSprite()->angle += PI * 1.2f * dt;
-					deltaAngle += PI * 1.2f * dt;
-				}
 			}
+
+
+			if (aimElevation < 0.0f)
+			{
+				aimElevation = 0.0f;
+			}
+
+			if (aimElevation > 1.0f)
+			{
+				aimElevation = 1.0f;
+			}
+
 
 			sf::Vector2f dir; dir.x = sin(getSprite()->angle); dir.y = cos(getSprite()->angle);
 			sf::Vector2f perpdir; perpdir.x = sin(getSprite()->angle + PI / 2.0f); perpdir.y = cos(getSprite()->angle + PI / 2.0f);
@@ -79,18 +80,49 @@ void EPlayer::update(float dt)
 			{
 				delta += dir;
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			if (inFPSControl)
 			{
-				delta -= perpdir;
+
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+				{
+					delta -= perpdir;
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+				{
+					delta += perpdir;
+				}
+			}
+			else
+			{
+
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+				{
+					delta -= perpdir;
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+				{
+					delta += perpdir;
+				}
+
+
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+				{
+					getSprite()->angle -= PI * 1.2f * dt;
+					deltaAngle += PI * 1.2f * dt;
+				}
+
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+				{
+					getSprite()->angle += PI * 1.2f * dt;
+					deltaAngle += PI * 1.2f * dt;
+				}
+
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 			{
 				delta -= dir;
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-			{
-				delta += perpdir;
-			}
+
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::PageUp))
 			{

@@ -1,6 +1,6 @@
 #include "Client.h"
 #include "../Map/Entities/Bases/TileEntity.h"
-
+#include "../Map/Entities/EPlayer.h"
 
 void Client::mainFunc(int argc, char** argv)
 {
@@ -61,7 +61,6 @@ void Client::mainFunc(int argc, char** argv)
 bool Client::connect(std::string ip, uint16_t port)
 {
 
-	// TODO: Allow user to input
 	ENetAddress address;
 	enet_address_set_host(&address, ip.c_str());
 	address.port = port;
@@ -164,6 +163,7 @@ void Client::play()
 	int topUiHeight = 32;
 
 	win = new sf::RenderWindow(sf::VideoMode(renderWidth * screenScale, renderHeight * screenScale + uiHeight + topUiHeight), "Raycasting game");
+	//win->setFramerateLimit(60);
 
 	sf::Font font = sf::Font();
 	font.loadFromFile("Assets/consola.ttf");
@@ -171,6 +171,9 @@ void Client::play()
 	sf::Image target; target.create(renderWidth, renderHeight);
 	sf::Texture targetTex;
 	sf::Sprite targetSpr;
+
+	sf::Texture cursorTex;
+	cursorTex.loadFromFile("Assets/cursor.png");
 
 	sf::Clock dtc;
 	sf::Time dtt;
@@ -238,14 +241,29 @@ void Client::play()
 			enet_packet_destroy(netevent.packet);
 		}
 
+		// Not really neccesary
+		win->clear();
+
+		EPlayer* player = (EPlayer*)controlledEntityPtr;
+
 		if (win->hasFocus())
 		{
-			gameMouseCoords = sf::Mouse::getPosition(*win);
-			gameMouseCoords.y -= topUiHeight;
-			gameMouseCoords /= screenScale;
+			if (player->inFPSControl)
+			{
+				gameMouseCoords = sf::Vector2i();
+				gameMouseCoords.x = (int)(renderWidth * 0.5f);
+				gameMouseCoords.y = (int)(player->aimElevation * renderHeight);
+			}
+			else
+			{
+				gameMouseCoords = sf::Mouse::getPosition(*win);
+				gameMouseCoords.y -= topUiHeight;
+				gameMouseCoords /= screenScale;
+
+			}
 
 
-			if (gameMouseCoords.y >= 0 && gameMouseCoords.y < renderHeight && gameMouseCoords.x >= 0 && gameMouseCoords.x < renderWidth)
+			if (gameMouseCoords.y > 0 && gameMouseCoords.y < renderHeight && gameMouseCoords.x >= 0 && gameMouseCoords.x < renderWidth)
 			{
 				mouseInGame = true;
 			}
@@ -254,11 +272,9 @@ void Client::play()
 				mouseInGame = false;
 			}
 
-			
 		}
 
-		// Not really neccesary
-		win->clear();
+
 
 		world.update(dt);
 
@@ -371,7 +387,7 @@ void Client::play()
 						string += "Linked: " + std::to_string(tileEnt->uid) + " | ";
 
 						// Send hover
-						tileEnt->onUserHover(controlledEntityPtr, rSide, sf::Vector2f(texX, texY));
+						bool showIcon = tileEnt->onUserHover(controlledEntityPtr, rSide, sf::Vector2f(texX, texY));
 
 						if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 						{
@@ -391,6 +407,21 @@ void Client::play()
 
 							wasMouseClicked = false;
 						}
+
+						if (showIcon)
+						{
+							// Draw cursor
+
+							if (player->inFPSControl)
+							{
+								sf::Sprite cursor; cursor.setTexture(cursorTex);
+								cursor.setOrigin(cursorTex.getSize().x / 2.0f, cursorTex.getSize().y / 2.0f);
+								cursor.setPosition(renderWidth * screenScale * 0.5f, topUiHeight + player->aimElevation * renderHeight * screenScale);
+								cursor.setScale(screenScale, screenScale);
+
+								win->draw(cursor);
+							}
+						}
 					}
 
 
@@ -400,6 +431,9 @@ void Client::play()
 				win->draw(debugText);
 			}
 		}
+
+
+
 
 		win->display();
 

@@ -205,12 +205,13 @@ void Server::mainFunc(int argc, char** argv)
 
 void Server::createDefaultWorld()
 {
-	world.map = new Map(16, 32);
+	world.map = new Map(16, 16);
 
 	for (size_t y = 0; y < world.map->map_height; y++)
 	{
 		for (size_t x = 0; x < world.map->map_width; x++)
 		{
+			world.map->tiles[y * world.map->map_width + x].ceilingID = 3;
 
 			if (x == 5 && y == 5)
 			{
@@ -230,8 +231,9 @@ void Server::createDefaultWorld()
 			}
 
 
-			if (x % 4 == 0 || y % 4 == 0)
+			if (x % 7 == 0 && y % 7 == 0)
 			{
+				world.map->tiles[y * world.map->map_width + x].ceilingID = 0;
 				world.map->tiles[y * world.map->map_width + x].floorID = 4;
 			}
 		}
@@ -260,7 +262,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 2;
+	targetPlayers = 1;
 }
 
 

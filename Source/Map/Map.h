@@ -12,7 +12,7 @@
 
 #define MAP_SHADOW_FADE 0.4f
 #define MAP_SHADOW_INTENSE 0.333f
-#define MAP_LIGHT_PROPAGATION 4
+#define MAP_LIGHT_PROPAGATION 5
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
@@ -34,11 +34,13 @@ enum Side
 
 using namespace nlohmann;
 
-
+#define DRAW_SKIP 1
 
 class Map
 {
 private:
+
+	int drawNum = 0;
 
 	sf::Uint8* outPixels;
 	sf::Uint8* outBufferPixels;

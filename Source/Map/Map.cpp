@@ -87,6 +87,24 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t
 		texX = (int)(tileWidth - texX - 1);
 	}
 
+	sf::Vector3f mult;
+	if (realSide == 0)
+	{
+		mult = sf::Vector3f((float)hit.northLight.r / 255.0f, (float)hit.northLight.g / 255.0f, (float)hit.northLight.b / 255.0f);
+	}
+	else if (realSide == 1)
+	{
+		mult = sf::Vector3f((float)hit.eastLight.r / 255.0f, (float)hit.eastLight.g / 255.0f, (float)hit.eastLight.b / 255.0f);
+	}
+	else if (realSide == 2)
+	{
+		mult = sf::Vector3f((float)hit.southLight.r / 255.0f, (float)hit.southLight.g / 255.0f, (float)hit.southLight.b / 255.0f);
+	}
+	else if (realSide == 3)
+	{
+		mult = sf::Vector3f((float)hit.westLight.r / 255.0f, (float)hit.westLight.g / 255.0f, (float)hit.westLight.b / 255.0f);
+	}
+
 	for (int y = drawStart; y <= drawEnd; y++)
 	{
 		float currentDepth = depthBuffer[y * width + x];
@@ -99,22 +117,7 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t
 			// We rotate the texture 90º clockwise (change x for y)
 			sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID, tilesetWidth);
 
-			if (realSide == 0)
-			{
-				color = sf::Color(color.r * ((float)hit.northLight.r / 255.0f), color.g * ((float)hit.northLight.g / 255.0f), color.b * ((float)hit.northLight.b / 255.0f));
-			}
-			else if (realSide == 1)
-			{
-				color = sf::Color(color.r * ((float)hit.eastLight.r / 255.0f), color.g * ((float)hit.eastLight.g / 255.0f), color.b * ((float)hit.eastLight.b / 255.0f));
-			}
-			else if (realSide == 2)
-			{
-				color = sf::Color(color.r * ((float)hit.southLight.r / 255.0f), color.g * ((float)hit.southLight.g / 255.0f), color.b * ((float)hit.southLight.b / 255.0f));
-			}
-			else if (realSide == 3)
-			{
-				color = sf::Color(color.r * ((float)hit.westLight.r / 255.0f), color.g * ((float)hit.westLight.g / 255.0f), color.b * ((float)hit.westLight.b / 255.0f));
-			}
+			color = sf::Color(color.r * mult.x, color.g * mult.y, color.b * mult.z, color.a);
 
 			// Set coordinate X
 			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, map.x);
@@ -330,6 +333,11 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 
 		bool hitTransparent = false;
 
+		// Lighting, we simply use the block we are ontop
+		// as this is not a full block
+
+		sf::Vector3f mult = sf::Vector3f(hit.light.r / 255.0f, hit.light.g / 255.0f, hit.light.b / 255.0f);
+
 		for (size_t y = drawStart; y <= drawEnd; y++)
 		{
 			float currentDepth = depthBuffer[y * width + x];
@@ -346,6 +354,7 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 					texXoff = tileWidth - 1;
 				}
 				sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID - texXoff, tilesetWidth);
+				color.r *= mult.x; color.g *= mult.y; color.b *= mult.z;
 
 				if (color.a < 255)
 				{
@@ -435,7 +444,9 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		drawEnd = height;
 	}
 
-	for (int y = drawEnd + 1; y < height; y++)
+
+
+	for (int y = drawEnd + 1 + drawNum; y < height; y+=DRAW_SKIP)
 	{
 		float currentDepthFloor = depthBuffer[y * width + x];
 		float currentDepthCeiling = depthBuffer[(height - y) * width + x];
@@ -448,8 +459,8 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		// textures appear offset, so this is the solution
 		float weightPlayer = (currentDist) / (distShadow);
 		sf::Vector2f currentFloor;
-		currentFloor.x = weight * floorWall.x + (1.0 - weight) * pos.x;
-		currentFloor.y = weight * floorWall.y + (1.0 - weight) * pos.y;
+		currentFloor.x = weight * floorWall.x + (1.0f - weight) * pos.x;
+		currentFloor.y = weight * floorWall.y + (1.0f - weight) * pos.y;
 
 		sf::Vector2i floorTex;
 		floorTex.x = int(currentFloor.x * tileWidth) % (int)tileWidth;
@@ -514,7 +525,8 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 			if (at.ceilingID == 0)
 			{
 				// Skybox
-				color = getPixelFast(skyboxPixels, 0, std::min(height - y, (int)skybox.getSize().y - 1), 1);
+				//color = getPixelFast(skyboxPixels, 0, std::min(height - y, (int)skybox.getSize().y - 1), 1);
+				color = sf::Color(140, 232, 246);
 			}
 			else
 			{
@@ -615,6 +627,12 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)
 {
+	drawNum++;
+	if (drawNum >= DRAW_SKIP)
+	{
+		drawNum = 0;
+	}
+
 
 	const sf::Uint8* tilesetPixels = tileset.getPixelsPtr();
 	const sf::Uint8* skyboxPixels = skybox.getPixelsPtr();
@@ -1008,10 +1026,6 @@ void Map::updateLighting()
 			if (tile->ceilingID == 0 && (tile->tileType != Tile::WALL))
 			{
 				tile->light = sf::Color(255, 255, 255);
-			}
-			else if (x == 4 && y == 4)
-			{
-				tile->light = sf::Color(128, 128, 128);
 			}
 			else
 			{
