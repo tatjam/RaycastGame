@@ -241,10 +241,26 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 	if (hit.var0 == 0)
 	{
 		wallP = sf::Vector2f(0.0f, (float)hit.var2 / 255.0f);
+		/*if (hit.var2 == 0)
+		{
+			wallP.y += 0.001f;
+		}
+		else
+		{
+			wallP.y -= 0.001f;
+		}*/
 	}
 	else
 	{
 		wallP = sf::Vector2f((float)hit.var2 / 255.0f, 0.0f);
+		/*if (hit.var2 == 0)
+		{
+			wallP.x += 0.001f;
+		}
+		else
+		{
+			wallP.x -= 0.001f;
+		}*/
 	}
 
 	sf::Vector3f wallL;
@@ -290,7 +306,6 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 	minX = std::min(std::max(minX, 0.0f), 1.0f); maxX = std::min(std::max(maxX, 0.0f), 1.0f);
 	minY = std::min(std::max(minY, 0.0f), 1.0f); maxY = std::min(std::max(maxY, 0.0f), 1.0f);
 
-
 	if (xIntercept < minX || xIntercept > maxX || yIntercept < minY || yIntercept > maxY)
 	{
 		// We missed the wall
@@ -333,10 +348,47 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 
 		bool hitTransparent = false;
 
-		// Lighting, we simply use the block we are ontop
-		// as this is not a full block
+		// Lighting
+		
+		// If we are "open" we use the block light directly
+		// Open means var1 is not 0 (128), there is a gap
+		sf::Vector3f mult;
+		if (hit.var1 == 128 && hit.var2 != 0 && hit.var2 != 255)
+		{
+			if (hit.var0 == 1)
+			{
+				// y-Oriented
+				if (pos.x < map.x + (float)hit.var2 / 255.0f)
+				{
+					// Seen from the west
+					mult = mult = sf::Vector3f(hit.westLight.r / 255.0f, hit.westLight.g / 255.0f, hit.westLight.b / 255.0f);
+				}
+				else
+				{
+					// Seen from the east
+					mult = mult = sf::Vector3f(hit.eastLight.r / 255.0f, hit.eastLight.g / 255.0f, hit.eastLight.b / 255.0f);
+				}
+			}
+			else
+			{
+				// X-Oriented
+				if (pos.y < map.y + (float)hit.var2 / 255.0f)
+				{
+					// Seen from the north
+					mult = mult = sf::Vector3f(hit.northLight.r / 255.0f, hit.northLight.g / 255.0f, hit.northLight.b / 255.0f);
+				}
+				else
+				{
+					// Seen from the south
+					mult = mult = sf::Vector3f(hit.southLight.r / 255.0f, hit.southLight.g / 255.0f, hit.southLight.b / 255.0f);
+				}
+			}
+		}
+		else
+		{
+			mult = sf::Vector3f(hit.light.r / 255.0f, hit.light.g / 255.0f, hit.light.b / 255.0f);
 
-		sf::Vector3f mult = sf::Vector3f(hit.light.r / 255.0f, hit.light.g / 255.0f, hit.light.b / 255.0f);
+		}
 
 		for (size_t y = drawStart; y <= drawEnd; y++)
 		{
@@ -479,6 +531,86 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 			reflect = getPixelFast(outPixels, x, drawEnd - (y - drawEnd), width);
 		}
 
+		sf::Vector3f light;
+
+		// Special case for closed thin walls (doors)
+		if(at.tileType == Tile::THIN)
+		{
+			sf::Vector3f curSideLight;
+			sf::Vector3f oppSideLight;
+			float dist;
+
+			if(at.var0 == 0)
+			{
+				// X-aligned, compare Y
+				dist = currentFloor.y - floor(currentFloor.y) - at.var2 / 255.0f;
+				if (dist < 0.0f)
+				{
+					curSideLight = sf::Vector3f(at.northLight.r / 255.0f, at.northLight.g / 255.0f, at.northLight.b / 255.0f);
+					oppSideLight = sf::Vector3f(at.southLight.r / 255.0f, at.southLight.g / 255.0f, at.southLight.b / 255.0f);
+
+				}
+				else 
+				{
+					curSideLight = sf::Vector3f(at.southLight.r / 255.0f, at.southLight.g / 255.0f, at.southLight.b / 255.0f);
+					oppSideLight = sf::Vector3f(at.northLight.r / 255.0f, at.northLight.g / 255.0f, at.northLight.b / 255.0f);
+				}
+			}
+			else
+			{
+				dist = currentFloor.x - floor(currentFloor.y) - at.var2 / 255.0f;
+				// Y-aligned, compare X
+				if (dist < 0.0f)
+				{
+					curSideLight = sf::Vector3f(at.westLight.r / 255.0f, at.westLight.g / 255.0f, at.westLight.b / 255.0f);
+					oppSideLight = sf::Vector3f(at.eastLight.r / 255.0f, at.eastLight.g / 255.0f, at.eastLight.b / 255.0f);
+				
+				}
+				else
+				{
+					curSideLight = sf::Vector3f(at.eastLight.r / 255.0f, at.eastLight.g / 255.0f, at.eastLight.b / 255.0f);
+					oppSideLight = sf::Vector3f(at.westLight.r / 255.0f, at.westLight.g / 255.0f, at.westLight.b / 255.0f);
+				}
+			}
+
+			if (at.var1 == 128)
+			{
+				light = curSideLight;
+			}
+			else
+			{
+				dist = -dist;
+
+				if (dist < 0.0f)
+				{
+					dist = -dist;
+				}
+
+				//dist *= 0.5f;
+				dist += 0.5f;
+
+				//dist = 0.5f * dist;
+				
+				// Interpolate between the two
+				
+				float rInterp = curSideLight.x * dist + oppSideLight.x * (1.0f - dist);
+				float gInterp = curSideLight.y * dist + oppSideLight.y * (1.0f - dist);
+				float bInterp = curSideLight.z * dist + oppSideLight.z * (1.0f - dist);
+				
+
+				/*float rInterp = curSideLight.x * (1.0f - dist) + oppSideLight.x * dist;
+				float gInterp = curSideLight.y * (1.0f - dist) + oppSideLight.y * dist;
+				float bInterp = curSideLight.z * (1.0f - dist) + oppSideLight.z * dist;*/
+
+				light = sf::Vector3f(rInterp, gInterp, bInterp);
+
+			}
+		}
+		else
+		{
+			light = sf::Vector3f(at.light.r / 255.0f, at.light.g / 255.0f, at.light.b / 255.0f);
+		}
+
 		if (currentDist < currentDepthFloor)
 		{
 			color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.floorID, tilesetWidth);
@@ -512,7 +644,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 			}
 
 
-			color = sf::Color(color.r * (at.light.r / 255.0f), color.g * (at.light.g / 255.0f), color.b * (at.light.b / 255.0f));
+			color = sf::Color(color.r * light.x, color.g * light.y, color.b * light.z);
 
 			setPixelFast(outPixels, x, y, width, color);
 
@@ -558,7 +690,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 					color = sf::Color(color.r * newShadow, color.g * newShadow, color.b * newShadow);
 				}
 
-				color = sf::Color(color.r * (at.light.r / 255.0f), color.g * (at.light.g / 255.0f), color.b * (at.light.b / 255.0f));
+				color = sf::Color(color.r * light.x, color.g * light.y, color.b * light.z);
 			}
 
 			setPixelFast(outPixels, x, height - y, width, color);
@@ -1048,7 +1180,7 @@ void Map::updateLighting()
 
 				// We only propagate if we are transparent
 				// or we are not a full block
-				if (tile->tileType != Tile::WALL)
+				if (tile->transparent)
 				{
 
 					Tile u = Tile(), d = Tile(), r = Tile(), l = Tile();
@@ -1172,6 +1304,34 @@ void Map::updateLighting()
 			tile->southLight = d.light;
 			tile->westLight = l.light;
 
+			if (tile->tileType == Tile::THIN && (tile->var2 == 0 || tile->var2 == 255))
+			{
+				// The tile light is the opposite side of the closed wall
+				if (tile->var0 == 0)
+				{
+					// X-oriented
+					if (tile->var2 == 0)
+					{
+						tile->light = d.light;
+					}
+					else
+					{
+						tile->light = u.light;
+					}
+				}
+				else
+				{
+					// Y-oriented
+					if (tile->var2 == 0)
+					{
+						tile->light = r.light;
+					}
+					else
+					{
+						tile->light = l.light;
+					}
+				}
+			}
 		}
 	}
 }

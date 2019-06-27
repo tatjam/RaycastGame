@@ -14,6 +14,7 @@
 //		-> float openSpeed
 //		-> float closeSpeed
 //		-> bool rightwards
+//		-> bool transparent
 //		-> float openThresold
 //	- setState (SERVER->CLIENT)
 //		-> float state
@@ -34,6 +35,9 @@ private:
 	// right or to the left? tile.var1
 	bool rightwards;
 
+	// Is the door transparent even when closed?
+	bool transparent;
+	
 	// At what point is the door walkable?
 	float openThresold;
 
@@ -58,6 +62,8 @@ public:
 	void setOpenThresold(float val) { openThresold = val; }
 	float getOpenThresold() { return openThresold; }
 
+	void setTransparent(bool val) { transparent = val; }
+	bool getTransparent() { return transparent; }
 
 	float getState() { return state; }
 

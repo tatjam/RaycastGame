@@ -17,6 +17,7 @@ void DoorEntity::callSetProperty()
 	j["closeSpeed"] = getCloseSpeed();
 	j["rightwards"] = getRightwards();
 	j["openThresold"] = getOpenThresold();
+	j["transparent"] = getTransparent();
 
 	sendGenericCallToAll("setState", j);
 }
@@ -31,6 +32,7 @@ void DoorEntity::onGenericCall(std::string cmd, json args, ENetPeer* peer)
 		setCloseSpeed(args["closeSpeed"]);
 		setRightwards(args["rightwards"]);
 		setOpenThresold(args["openThresold"]);
+		setTransparent(args["transparent"]);
 	}
 	else if (cmd == "setState") 
 	{
@@ -51,6 +53,22 @@ void DoorEntity::update(float dt)
 		else
 		{
 			getTile()->walkable = false;
+		}
+
+		if (getTransparent())
+		{
+			getTile()->transparent = true;
+		}
+		else
+		{
+			if (state >= 0.1f)
+			{
+				getTile()->transparent = true;
+			}
+			else
+			{
+				getTile()->transparent = false;
+			}
 		}
 
 		if (rightwards)
@@ -98,6 +116,7 @@ json DoorEntity::serialize()
 	j["closeSpeed"] = getCloseSpeed();
 	j["rightwards"] = getRightwards();
 	j["openThresold"] = getOpenThresold();
+	j["transparent"] = getTransparent();
 
 	return j;
 }
@@ -110,6 +129,7 @@ void DoorEntity::deserialize(json j)
 	setCloseSpeed(j["closeSpeed"]);
 	setRightwards(j["rightwards"]);
 	setOpenThresold(j["openThresold"]);
+	setTransparent(j["transparent"]);
 }
 
 

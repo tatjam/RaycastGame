@@ -29,8 +29,7 @@ struct Tile
 
 	int texID;
 	TileType tileType;
-	// Set to true if this use a texture with alpha
-	// as the ray will continue
+	// Can LIGHT go through this tile?
 	bool transparent;
 	uint8_t var0, var1, var2;
 
@@ -60,7 +59,7 @@ struct Tile
 	{
 		texID = 0;
 		tileType = EMPTY;
-		transparent = false;
+		transparent = true;
 		var0 = 0; var1 = 0; var2 = 0;
 		floorID = 0; ceilingID = 0;
 		reflectiveFloor = false; reflectiveCeiling = false;
