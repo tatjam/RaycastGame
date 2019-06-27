@@ -444,9 +444,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		drawEnd = height;
 	}
 
-
-
-	for (int y = drawEnd + 1 + drawNum; y < height; y+=DRAW_SKIP)
+	for (int y = drawEnd + 1; y < height; y++)
 	{
 		float currentDepthFloor = depthBuffer[y * width + x];
 		float currentDepthCeiling = depthBuffer[(height - y) * width + x];
@@ -627,12 +625,6 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)
 {
-	drawNum++;
-	if (drawNum >= DRAW_SKIP)
-	{
-		drawNum = 0;
-	}
-
 
 	const sf::Uint8* tilesetPixels = tileset.getPixelsPtr();
 	const sf::Uint8* skyboxPixels = skybox.getPixelsPtr();
