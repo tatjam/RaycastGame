@@ -18,7 +18,7 @@ public:
 		setCloseSpeed(1.0f);
 		setOpenThresold(0.5f);
 		setRightwards(false);
-		setTransparent(true);
+		setTransparent(false);
 	}
 
 	~ESimpleDoor();

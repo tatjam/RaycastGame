@@ -233,7 +233,7 @@ void Server::createDefaultWorld()
 			}
 
 
-			if (x % 7 == 0 && y % 7 == 0)
+			if (x % 6 == 0 && y % 6 == 0)
 			{
 				world.map->tiles[y * world.map->map_width + x].ceilingID = 0;
 				world.map->tiles[y * world.map->map_width + x].floorID = 4;

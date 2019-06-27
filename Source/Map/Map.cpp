@@ -596,11 +596,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 				float rInterp = curSideLight.x * dist + oppSideLight.x * (1.0f - dist);
 				float gInterp = curSideLight.y * dist + oppSideLight.y * (1.0f - dist);
 				float bInterp = curSideLight.z * dist + oppSideLight.z * (1.0f - dist);
-				
-
-				/*float rInterp = curSideLight.x * (1.0f - dist) + oppSideLight.x * dist;
-				float gInterp = curSideLight.y * (1.0f - dist) + oppSideLight.y * dist;
-				float bInterp = curSideLight.z * (1.0f - dist) + oppSideLight.z * dist;*/
+			
 
 				light = sf::Vector3f(rInterp, gInterp, bInterp);
 

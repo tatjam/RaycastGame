@@ -12,7 +12,7 @@
 
 #define MAP_SHADOW_FADE 0.4f
 #define MAP_SHADOW_INTENSE 0.333f
-#define MAP_LIGHT_PROPAGATION 5
+#define MAP_LIGHT_PROPAGATION 6
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
