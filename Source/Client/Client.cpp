@@ -200,6 +200,19 @@ void Client::play()
 	nLight->attenuation = 8.0f;
 	world.map->lights.push_back(nLight);
 
+	sf::Image overlay = sf::Image();
+	overlay.loadFromFile("Assets/overlay.png");
+	overlay = rotate90(&overlay);
+
+	world.map->getTilePtr(9, 8)->overlay = &overlay;
+	world.map->getTilePtr(9, 8)->overlaySides.north = true;
+	world.map->getTilePtr(9, 8)->overlaySides.east = true;
+
+	world.map->getTilePtr(11, 10)->overlay = &overlay;
+	world.map->getTilePtr(11, 10)->overlaySides.floor = true;
+	world.map->getTilePtr(11, 10)->overlaySides.ceiling = true;
+
+
 	while (win->isOpen())
 	{
 		sf::Event event;

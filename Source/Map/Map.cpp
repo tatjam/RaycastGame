@@ -19,6 +19,16 @@ sf::Color getPixelFast(const sf::Uint8* pixels, int x, int y, int width)
 	return sf::Color(r, g, b, a);
 }
 
+sf::Color mixColor(sf::Color origin, sf::Color overlay)
+{
+	float alphaFloat = (float)overlay.a / 255.0f;
+	sf::Uint8 r = origin.r * (1.0f - alphaFloat) + overlay.r * alphaFloat;
+	sf::Uint8 g = origin.g * (1.0f - alphaFloat) + overlay.g * alphaFloat;
+	sf::Uint8 b = origin.b * (1.0f - alphaFloat) + overlay.b * alphaFloat;
+
+	return sf::Color(r, g, b);
+}
+
 void setPixelFast(sf::Uint8* target, int x, int y, int width, sf::Color color)
 {
 	target[(y * width + x) * 4 + 0] = color.r;
@@ -117,6 +127,13 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t
 			//sf::Color color = tileset.getPixel(texX, texY);
 			// We rotate the texture 90º clockwise (change x for y)
 			sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID, tilesetWidth);
+
+			if (hit.overlaySides.has((Side)realSide))
+			{
+				// Note that we use swapped coordinates here, too
+				sf::Color overColor = getPixelFast(hit.overlay->getPixelsPtr(), texY, texX, hit.overlay->getSize().x);
+				color = mixColor(color, overColor);
+			}
 
 			color = sf::Color(color.r * mult.x, color.g * mult.y, color.b * mult.z, color.a);
 
@@ -391,6 +408,8 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 					texXoff = tileWidth - 1;
 				}
 				sf::Color color = getPixelFast(tilesetPixels, texY, texX + tileWidth * hit.texID - texXoff, tilesetWidth);
+				// We don't support overlays
+
 				color.r *= mult.x; color.g *= mult.y; color.b *= mult.z;
 
 				if (color.a < 255)
@@ -655,6 +674,9 @@ bool Map::drawColumn(Tile hit, sf::Vector2i& step, int& side, int realSide, size
 			int texX = angle * tileWidth;
 
 			sf::Color color = getPixelFast(tilesetPixels, texY, texX + hit.texID * tileWidth, tilesetWidth);
+
+			// We don't support overlays
+
 			color = sf::Color(color.r * light.x, color.g * light.y, color.b * light.z);
 
 			setPixelFast(outPixels, x, y, width, color);
@@ -862,6 +884,12 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		{
 			color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.floorID, tilesetWidth);
 
+			if (at.overlaySides.has(Side::FLOOR))
+			{
+				sf::Color overColor = getPixelFast(at.overlay->getPixelsPtr(), floorTex.y, tileWidth - floorTex.x + 1, at.overlay->getSize().x);
+				color = mixColor(color, overColor);
+			}
+
 			if (at.reflectiveFloor)
 			{
 				float r = reflect.r * (1.0f - shadow) + color.r;
@@ -908,6 +936,12 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 			else
 			{
 				color = getPixelFast(tilesetPixels, floorTex.y, floorTex.x + tileWidth * at.ceilingID, tilesetWidth);
+
+				if (at.overlaySides.has(Side::CEILING))
+				{
+					sf::Color overColor = getPixelFast(at.overlay->getPixelsPtr(), floorTex.y, floorTex.x, at.overlay->getSize().x);
+					color = mixColor(color, overColor);
+				}
 
 				if (at.reflectiveCeiling)
 				{
@@ -1437,7 +1471,7 @@ void Map::updateLighting()
 
 			float att = lights[i]->attenuation;
 
-			float cDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(0.5f, 0.5f)) * att), 1.0f);
+			float cDistInv = 1.0f;
 			float uDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(0.5f, -0.5f)) * att), 1.0f);
 			float rDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(1.5f, 0.5f)) * att), 1.0f);
 			float dDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(0.5f, 1.5f)) * att), 1.0f);
@@ -1459,7 +1493,7 @@ void Map::updateLighting()
 		}
 		else if (lights[i]->type == Light::AREA)
 		{
-			for (float theta = 0; theta < 2.0f * PI; theta += 0.1f)
+			for (float theta = 0; theta < 2.0f * PI; theta += 0.25f)
 			{
 				// Direction vector
 				sf::Vector2f direction;
@@ -1794,33 +1828,7 @@ sf::Vector3f Map::getLight(sf::Vector2f pos)
 
 }
 
-sf::Image rotate90(sf::Image* original)
-{
-	sf::Image out;
-	size_t orWidth = original->getSize().x;
-	size_t orHeight = original->getSize().y;
-	sf::Uint8* pixels = (sf::Uint8*)malloc(orWidth * orHeight * 4 * sizeof(sf::Uint8));
-	const sf::Uint8* orPixels = original->getPixelsPtr();
 
-	for (size_t orY = 0; orY < orHeight; orY++)
-	{
-		for (size_t orX = 0; orX < orWidth; orX++)
-		{
-			// To rotate we change x for y
-			size_t x = orY;
-			size_t y = orX;
-
-			pixels[(y * orHeight + x) * 4 + 0] = orPixels[(orY * orWidth + orX) * 4 + 0];
-			pixels[(y * orHeight + x) * 4 + 1] = orPixels[(orY * orWidth + orX) * 4 + 1];
-			pixels[(y * orHeight + x) * 4 + 2] = orPixels[(orY * orWidth + orX) * 4 + 2];
-			pixels[(y * orHeight + x) * 4 + 3] = orPixels[(orY * orWidth + orX) * 4 + 3];
-		}
-	}
-
-	out.create(orHeight, orWidth, pixels);
-	free(pixels);
-	return out;
-}
 
 Map::Map(size_t width, size_t height)
 {

@@ -233,7 +233,7 @@ World::World()
 	clientUID = UINT32_MAX;
 	map = NULL;
 	started = false;
-	lightingInterval = 0.05f;
+	lightingInterval = 0.1f;
 	lightingTimer = lightingInterval;
 }
 

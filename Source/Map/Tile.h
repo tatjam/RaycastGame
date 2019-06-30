@@ -6,6 +6,54 @@
 using namespace nlohmann;
 
 
+enum Side
+{
+	NORTH,
+	EAST,
+	SOUTH,
+	WEST,
+	CEILING,
+	FLOOR
+};
+
+struct SideList
+{
+	bool north, east, south, west, ceiling, floor;
+
+	bool has(Side side)
+	{
+		if (side == NORTH)
+		{
+			return north;
+		}
+		else if (side == EAST)
+		{
+			return east;
+		}
+		else if (side == SOUTH)
+		{
+			return south;
+		}
+		else if (side == WEST)
+		{
+			return west;
+		}
+		else if (side == FLOOR)
+		{
+			return floor;
+		}
+		else if (side == CEILING)
+		{
+			return ceiling;
+		}
+		else
+		{
+			return false;
+		}
+	}
+};
+
+
 struct Tile
 {
 	enum TileType
@@ -60,6 +108,11 @@ struct Tile
 
 	uint32_t linked_entity;
 
+	// overlay must be sized exactly tileWidth*tileWidth
+
+	SideList overlaySides;
+	sf::Image* overlay;
+	
 	Tile()
 	{
 		texID = 0;
@@ -70,6 +123,8 @@ struct Tile
 		reflectiveFloor = false; reflectiveCeiling = false;
 		linked_entity = 0;
 		walkable = true;
+		overlay = NULL;
+		overlaySides = { 0 };
 	}
 
 	void setAllLights(sf::Vector3f val)

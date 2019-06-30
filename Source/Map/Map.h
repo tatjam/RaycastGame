@@ -6,6 +6,7 @@
 #include "Sprite.h"
 #include "Tile.h"
 #include "Light.h"
+#include "../Utils.h"
 
 #ifndef PI
 #define PI 3.14159265358979323f
@@ -23,15 +24,6 @@
 
 #define TEX_PREC 16.0f
 
-enum Side
-{
-	NORTH,
-	EAST,
-	SOUTH,
-	WEST,
-	CEILING,
-	FLOOR
-};
 
 using namespace nlohmann;
 

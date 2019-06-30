@@ -250,7 +250,7 @@ void Server::createDefaultWorld()
 				world.map->tiles[y * world.map->map_width + x].transparent = false;
 			}
 
-			if ((x == 9 && y == 8) || (x == 7 && y == 8) || (x == 10 && y == 8) || (x == 6 && y == 8) || (x == 11 && y == 8) || (x == 5 && y == 8) || (x == 12 && y == 8) || (x == 4 && y == 8))
+			if ((x == 9 && y == 8) || (x == 7 && y == 8) || (x == 10 && y == 8) || (x == 6 && y == 8) || (x == 11 && y == 8) || (x == 5 && y == 8) || (x == 12 && y == 8) || (x == 4 && y == 8) || (x == 12 && y == 12))
 			{
 				world.map->tiles[y * world.map->map_width + x].texID = 4;
 				world.map->tiles[y * world.map->map_width + x].tileType = Tile::WALL;

@@ -149,6 +149,7 @@
     <ClCompile Include="Source\Map\World.cpp" />
     <ClCompile Include="Source\Packet.cpp" />
     <ClCompile Include="Source\Server\Server.cpp" />
+    <ClCompile Include="Source\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />
@@ -184,6 +185,7 @@
     <ClInclude Include="Source\ProgramType.h" />
     <ClInclude Include="Source\Server\Server.h" />
     <ClInclude Include="Source\Map\Entities\Bases\SpriteEntity.h" />
+    <ClInclude Include="Source\Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="client.log" />
