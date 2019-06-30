@@ -108,6 +108,7 @@
       <AdditionalIncludeDirectories>C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -174,6 +175,7 @@
     <ClInclude Include="Source\Map\Entities\EPlayer.h" />
     <ClInclude Include="Source\Client\Client.h" />
     <ClInclude Include="Source\Map\Entity.h" />
+    <ClInclude Include="Source\Map\Light.h" />
     <ClInclude Include="Source\Map\Map.h" />
     <ClInclude Include="Source\Map\Sprite.h" />
     <ClInclude Include="Source\Map\Tile.h" />

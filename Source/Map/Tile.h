@@ -21,10 +21,15 @@ struct Tile
 		// var2 -> Offset Along normal 0->255
 		THIN,
 
-		// A 1x1 column
-		// var0 -> 0: 1x1, 1: 0.5x0.5, 2: 0.25x0.25
-		// Always centered
+		// A column, circular. Maps the texture around it
+		// var0 -> Radius, converted to a float so (0->255) = (0->1)
+		// var1 -> Texture Offset, converted to a float (0->255) = (0->1)
+		// var2 -> Center location
 		COLUMN,
+
+
+
+
 	};
 
 	int texID;
@@ -43,15 +48,15 @@ struct Tile
 	bool reflectiveCeiling;
 
 	// Light for floor and ceiling
-	sf::Color light;
-	sf::Color prevLight;
-	sf::Color startLight;
+	sf::Vector3f light;
+	sf::Vector3f prevLight;
+	sf::Vector3f startLight;
 
 	// Only on non empties
-	sf::Color westLight;	// -X
-	sf::Color eastLight;	// +X 
-	sf::Color northLight;	// -Y
-	sf::Color southLight;	// +Y
+	sf::Vector3f westLight;		// -X
+	sf::Vector3f eastLight;		// +X 
+	sf::Vector3f northLight;	// -Y
+	sf::Vector3f southLight;	// +Y
 
 	uint32_t linked_entity;
 
@@ -65,6 +70,13 @@ struct Tile
 		reflectiveFloor = false; reflectiveCeiling = false;
 		linked_entity = 0;
 		walkable = true;
+	}
+
+	void setAllLights(sf::Vector3f val)
+	{
+		light = val;
+		prevLight = val;
+		startLight = val;
 	}
 
 	json serialize();

@@ -232,11 +232,39 @@ void Server::createDefaultWorld()
 				world.map->tiles[y * world.map->map_width + x].transparent = false;
 			}
 
-
-			if (x % 6 == 0 && y % 6 == 0)
+			/*if (x % 6 == 0 && y % 6 == 0)
 			{
 				world.map->tiles[y * world.map->map_width + x].ceilingID = 0;
 				world.map->tiles[y * world.map->map_width + x].floorID = 4;
+			}*/
+
+
+			if (x == 8 && y == 8)
+			{
+				world.map->tiles[y * world.map->map_width + x].texID = 8;
+				world.map->tiles[y * world.map->map_width + x].tileType = Tile::THIN;
+				world.map->tiles[y * world.map->map_width + x].var2 = 128;
+				world.map->tiles[y * world.map->map_width + x].var1 = 128;
+				world.map->tiles[y * world.map->map_width + x].var0 = 0;
+				world.map->tiles[y * world.map->map_width + x].walkable = false;
+				world.map->tiles[y * world.map->map_width + x].transparent = false;
+			}
+
+			if ((x == 9 && y == 8) || (x == 7 && y == 8) || (x == 10 && y == 8) || (x == 6 && y == 8) || (x == 11 && y == 8) || (x == 5 && y == 8) || (x == 12 && y == 8) || (x == 4 && y == 8))
+			{
+				world.map->tiles[y * world.map->map_width + x].texID = 4;
+				world.map->tiles[y * world.map->map_width + x].tileType = Tile::WALL;
+				world.map->tiles[y * world.map->map_width + x].walkable = false;
+				world.map->tiles[y * world.map->map_width + x].transparent = false;
+			}
+
+			if (x == 8 && y == 4)
+			{
+				world.map->tiles[y * world.map->map_width + x].texID = 3;
+				world.map->tiles[y * world.map->map_width + x].tileType = Tile::COLUMN;
+				world.map->tiles[y * world.map->map_width + x].walkable = false;
+				world.map->tiles[y * world.map->map_width + x].transparent = false;
+				world.map->tiles[y * world.map->map_width + x].var0 = 255;
 			}
 		}
 	}
@@ -244,6 +272,8 @@ void Server::createDefaultWorld()
 	ESimpleDoor* door = (ESimpleDoor*)world.createGlobalEntity(Entity::DOOR_SIMPLE, this);
 	door->setTilePos(5, 5);
 
+	ESimpleDoor* door2 = (ESimpleDoor*)world.createGlobalEntity(Entity::DOOR_SIMPLE, this);
+	door2->setTilePos(8, 8);
 }
 
 void Server::downloadTo(ConnectedClient* target)
@@ -264,7 +294,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 1;
+	targetPlayers = 2;
 }
 
 

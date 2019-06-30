@@ -90,20 +90,21 @@ bool Map::drawWall(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t
 	sf::Vector3f mult;
 	if (realSide == 0)
 	{
-		mult = sf::Vector3f((float)hit.northLight.r / 255.0f, (float)hit.northLight.g / 255.0f, (float)hit.northLight.b / 255.0f);
+		mult = hit.northLight;
 	}
 	else if (realSide == 1)
 	{
-		mult = sf::Vector3f((float)hit.eastLight.r / 255.0f, (float)hit.eastLight.g / 255.0f, (float)hit.eastLight.b / 255.0f);
+		mult = hit.eastLight;
 	}
 	else if (realSide == 2)
 	{
-		mult = sf::Vector3f((float)hit.southLight.r / 255.0f, (float)hit.southLight.g / 255.0f, (float)hit.southLight.b / 255.0f);
+		mult = hit.southLight;
 	}
 	else if (realSide == 3)
 	{
-		mult = sf::Vector3f((float)hit.westLight.r / 255.0f, (float)hit.westLight.g / 255.0f, (float)hit.westLight.b / 255.0f);
+		mult = hit.westLight;
 	}
+
 
 	for (int y = drawStart; y <= drawEnd; y++)
 	{
@@ -241,26 +242,10 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 	if (hit.var0 == 0)
 	{
 		wallP = sf::Vector2f(0.0f, (float)hit.var2 / 255.0f);
-		/*if (hit.var2 == 0)
-		{
-			wallP.y += 0.001f;
-		}
-		else
-		{
-			wallP.y -= 0.001f;
-		}*/
 	}
 	else
 	{
 		wallP = sf::Vector2f((float)hit.var2 / 255.0f, 0.0f);
-		/*if (hit.var2 == 0)
-		{
-			wallP.x += 0.001f;
-		}
-		else
-		{
-			wallP.x -= 0.001f;
-		}*/
 	}
 
 	sf::Vector3f wallL;
@@ -361,12 +346,12 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 				if (pos.x < map.x + (float)hit.var2 / 255.0f)
 				{
 					// Seen from the west
-					mult = mult = sf::Vector3f(hit.westLight.r / 255.0f, hit.westLight.g / 255.0f, hit.westLight.b / 255.0f);
+					mult = hit.westLight;
 				}
 				else
 				{
 					// Seen from the east
-					mult = mult = sf::Vector3f(hit.eastLight.r / 255.0f, hit.eastLight.g / 255.0f, hit.eastLight.b / 255.0f);
+					mult = hit.eastLight;
 				}
 			}
 			else
@@ -375,18 +360,18 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 				if (pos.y < map.y + (float)hit.var2 / 255.0f)
 				{
 					// Seen from the north
-					mult = mult = sf::Vector3f(hit.northLight.r / 255.0f, hit.northLight.g / 255.0f, hit.northLight.b / 255.0f);
+					mult = hit.northLight;
 				}
 				else
 				{
 					// Seen from the south
-					mult = mult = sf::Vector3f(hit.southLight.r / 255.0f, hit.southLight.g / 255.0f, hit.southLight.b / 255.0f);
+					mult = hit.southLight;
 				}
 			}
 		}
 		else
 		{
-			mult = sf::Vector3f(hit.light.r / 255.0f, hit.light.g / 255.0f, hit.light.b / 255.0f);
+			mult = hit.light;
 
 		}
 
@@ -446,7 +431,7 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 		float realWall = wall;
 		
 		drawFloorAndCeiling(side, x, pos, rayDir, map, realWall, perpWallDist, realWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
-
+		 
 		if (hitTransparent)
 		{
 			// We must keep going for this column
@@ -458,6 +443,265 @@ bool Map::drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirectorO
 		}
 	}
 
+}
+
+
+bool Map::drawColumn(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir, sf::Vector2i& map,
+	float& perpWallDist, int& height, int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels)
+{
+	// Line-circle intersection
+
+	// We express the ray as y=mx+c
+	// or as a vertical line (x=n)
+	// The circle is centered on (0.5, 0.5)
+
+
+	// Obtain the ray's equation
+	float wall;
+
+	if (side == 0)
+	{
+		wall = pos.y + perpWallDist * rayDir.y;
+	}
+	else
+	{
+		wall = pos.x + perpWallDist * rayDir.x;
+	}
+
+	wall -= floor(wall);
+
+
+	sf::Vector2f rayPos;
+
+	// NESW
+	if (realSide == 0)
+	{
+		rayPos.x = wall;
+		rayPos.y = 0.0f;
+	}
+	else if (realSide == 1)
+	{
+		rayPos.x = 1.0f;
+		rayPos.y = wall;
+	}
+	else if (realSide == 2)
+	{
+		rayPos.x = wall;
+		rayPos.y = 1.0f;
+	}
+	else
+	{
+		rayPos.x = 0.0f;
+		rayPos.y = wall;
+	}
+	
+	sf::Vector2f rayDirector = (rayPos + sf::Vector2f(map.x, map.y)) - pos;
+
+
+	// Circle
+	// p = CenterX
+	// q = CenterY
+	// r = radius
+	float p = 0.5f; float q = 0.5f;
+	float r = (float)hit.var0 / 512.0f;
+
+	float xSol, ySol;
+
+	if (std::abs(rayDirector.x) >= 0.001f)
+	{
+		// Normal line
+		// y = mx + c
+		float m = rayDirector.y / rayDirector.x;
+
+		// c = y - mx, being (x, y) = rayPos
+		float c = rayPos.y - m * rayPos.x;
+
+		// Solve a quadratic
+		// Ax^2 + Bx + C = 0
+		float A = m * m + 1.0f;
+		float B = 2.0f * (m * c - m * q - p);
+		float C = q * q - r * r + p * p - 2 * c * q + c * c;
+
+		// Determinant
+		float det = B * B - 4.0f * A * C;
+
+		if (det < 0.0f)
+		{
+			// We missed the circle
+			return true;
+		}
+
+		if (det == 0.0f)
+		{
+			xSol = -B / (2.0f * A);
+			ySol = m * xSol + c;
+		}
+		else if (det > 0.0f)
+		{
+			// We have two solutions, we must choose the closest one
+			float x1 = (-B + sqrtf(det)) / (2.0f * A);
+			float x2 = (-B - sqrtf(det)) / (2.0f * A);
+			float y1 = m * x1 + c;
+			float y2 = m * x2 + c;
+
+			sf::Vector2f s1 = sf::Vector2f(x1, y1);
+			sf::Vector2f s2 = sf::Vector2f(x2, y2);
+
+			if (thor::length(rayPos - s1) >= thor::length(rayPos - s2))
+			{
+				xSol = x2;
+				ySol = y2;
+			}
+			else
+			{
+				xSol = x1;
+				ySol = y1;
+			}
+		}
+	}
+	else
+	{
+		// Vertical line
+		// We solve for y as we know x
+		float k = rayPos.x;
+		xSol = k;
+
+		float A = 1.0f;
+		float B = -2.0f * q;
+		float C = p * p + q * q - r * r - 2 * k * p + k * k;
+
+		float det = B * B - 4.0f * A * C;
+		if (det < 0.0f)
+		{
+			// We miss
+			return true;
+		}
+		else if (det == 0.0f)
+		{
+			ySol = -B / (2.0f * A);
+		}
+		else
+		{
+			float y1 = (-B + sqrt(det)) / (2.0f * A);
+			float y2 = (-B - sqrt(det)) / (2.0f * A);
+
+			sf::Vector2f s1 = sf::Vector2f(xSol, y1);
+			sf::Vector2f s2 = sf::Vector2f(xSol, y2);
+
+			if (thor::length(rayPos - s1) >= thor::length(rayPos - s2))
+			{
+				ySol = y2;
+			}
+			else
+			{
+				ySol = y1;
+			}
+		}
+
+	}
+
+	float realWallDist = std::abs(thor::dotProduct(sf::Vector2f(xSol, ySol) + sf::Vector2f(map.x, map.y) - pos, camDir));
+
+	int lineHeight = (int)(height / realWallDist);
+
+	int drawStart = (int)(-(float)lineHeight / 2 + height / 2);
+	if (drawStart < 0)
+	{
+		drawStart = 0;
+	} 
+
+	int drawEnd = (int)((float)lineHeight / 2 + height / 2);
+	if (drawEnd >= height)
+	{
+		drawEnd = height - 1;
+	} 
+
+	float angle = ((atan2(ySol - 0.5f, xSol - 0.5f) / PI) + 1.0f) / 2.0f;
+
+	sf::Vector3f light;
+
+	if (hit.transparent)
+	{
+		light = hit.light;
+	}
+	else
+	{
+		// 0 = Center, -1 = Opposie, 1 = Alongside
+		float xNrm = (xSol - 0.5f) / r;
+		float yNrm = (ySol - 0.5f) / r;
+
+		float southFactor = std::max(yNrm, 0.0f);
+		float eastFactor = std::max(xNrm, 0.0f);
+		float northFactor = std::max(-yNrm, 0.0f);
+		float westFactor = std::max(-xNrm, 0.0f);
+
+		light = hit.northLight * northFactor;
+		light += hit.southLight * southFactor;
+		light += hit.eastLight * eastFactor;
+		light += hit.westLight * westFactor;
+
+		light.x = std::max(std::min(light.x, 1.0f), 0.0f);
+		light.y = std::max(std::min(light.y, 1.0f), 0.0f);
+		light.z = std::max(std::min(light.z, 1.0f), 0.0f);
+	}
+
+	for (size_t y = drawStart + 1; y <= drawEnd; y++)
+	{
+		float currentDepth = depthBuffer[y * width + x];
+		if (realWallDist < currentDepth)
+		{
+			int d = y * 256 - (int)height * 128 + lineHeight * 128; // We use these factors to avoid floats
+			int texY = ((d * tileWidth) / lineHeight) / 256;
+			int texX = angle * tileWidth;
+
+			sf::Color color = getPixelFast(tilesetPixels, texY, texX + hit.texID * tileWidth, tilesetWidth);
+			color = sf::Color(color.r * light.x, color.g * light.y, color.b * light.z);
+
+			setPixelFast(outPixels, x, y, width, color);
+
+
+			// Set coordinate X
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, map.x);
+			// Set coordinate Y
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, map.y);
+
+			// Clear alpha as this is the first pass
+			sf::Uint8 alpha = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
+
+			// Set wall flag and side 
+			BIT_CLEAR(alpha, 0);
+			BIT_SET(alpha, 1);
+			BIT_CHANGE(alpha, 6, BIT_CHECK(realSide, 0));
+			BIT_CHANGE(alpha, 7, BIT_CHECK(realSide, 1));
+
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
+
+			sf::Vector2f tCoords;
+			tCoords.x = (float)texX / (float)tileWidth;
+			tCoords.y = (float)texY / (float)tileWidth;
+
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
+
+
+			depthBuffer[y * width + x] = realWallDist;
+		}
+	}
+
+	drawFloorAndCeiling(side, x, pos, rayDir, map, wall, perpWallDist, realWallDist, drawEnd, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+
+	return false;
+}
+
+sf::Vector3f maxVector(sf::Vector3f a, sf::Vector3f b)
+{
+	if (thor::squaredLength(a) > thor::squaredLength(b))
+	{
+		return a;
+	}
+	else
+	{
+		return b;
+	}
 }
 
 void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir, 
@@ -546,14 +790,14 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 				dist = currentFloor.y - floor(currentFloor.y) - at.var2 / 255.0f;
 				if (dist < 0.0f)
 				{
-					curSideLight = sf::Vector3f(at.northLight.r / 255.0f, at.northLight.g / 255.0f, at.northLight.b / 255.0f);
-					oppSideLight = sf::Vector3f(at.southLight.r / 255.0f, at.southLight.g / 255.0f, at.southLight.b / 255.0f);
+					curSideLight = at.northLight;
+					oppSideLight = at.southLight;
 
 				}
 				else 
 				{
-					curSideLight = sf::Vector3f(at.southLight.r / 255.0f, at.southLight.g / 255.0f, at.southLight.b / 255.0f);
-					oppSideLight = sf::Vector3f(at.northLight.r / 255.0f, at.northLight.g / 255.0f, at.northLight.b / 255.0f);
+					curSideLight = at.southLight;
+					oppSideLight = at.northLight;
 				}
 			}
 			else
@@ -562,14 +806,14 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 				// Y-aligned, compare X
 				if (dist < 0.0f)
 				{
-					curSideLight = sf::Vector3f(at.westLight.r / 255.0f, at.westLight.g / 255.0f, at.westLight.b / 255.0f);
-					oppSideLight = sf::Vector3f(at.eastLight.r / 255.0f, at.eastLight.g / 255.0f, at.eastLight.b / 255.0f);
+					curSideLight = at.westLight;
+					oppSideLight = at.eastLight;
 				
 				}
 				else
 				{
-					curSideLight = sf::Vector3f(at.eastLight.r / 255.0f, at.eastLight.g / 255.0f, at.eastLight.b / 255.0f);
-					oppSideLight = sf::Vector3f(at.westLight.r / 255.0f, at.westLight.g / 255.0f, at.westLight.b / 255.0f);
+					curSideLight = at.eastLight;
+					oppSideLight = at.westLight;
 				}
 			}
 
@@ -602,9 +846,16 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 
 			}
 		}
+		else if (at.tileType == Tile::COLUMN && at.transparent == false)
+		{
+			// Maximum one
+			light = maxVector(maxVector(at.northLight, at.southLight), maxVector(at.eastLight, at.westLight));
+		}
 		else
 		{
-			light = sf::Vector3f(at.light.r / 255.0f, at.light.g / 255.0f, at.light.b / 255.0f);
+			// We don't do linear interpolation here because it's laggy and doesn't look extremely good
+			//light = getLight(currentFloor);
+			light = at.light;
 		}
 
 		if (currentDist < currentDepthFloor)
@@ -922,6 +1173,10 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 			{
 				run = drawThin(hit, sf::Vector2f(-1.0f, -1.0f), sf::Vector2f(-1.0f, -1.0f), step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
 			}
+			else if(hit.tileType == Tile::COLUMN)
+			{
+				run = drawColumn(hit, step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+			}
 		}
 
 
@@ -1069,6 +1324,8 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 			}
 		}
 
+		sf::Vector3f light = getLight(sprites[i]->pos);
+		
 		for (int x = drawStartX; x < drawEndX; x++)
 		{
 			int texX = (int)(256 * (x - (-spriteWidth / 2 + spriteScreenX)) * realWidth / spriteWidth) / 256;
@@ -1087,7 +1344,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 
 						// No need for fast read functions here as it's a small ammount
 						sf::Color color = frame.getPixel(texX, texY);
-						color = sf::Color(color.r * ((float)at.light.r / 255.0f), color.g * ((float)at.light.g / 255.0f), color.b * ((float)at.light.b / 255.0f), color.a);
+						color = sf::Color(color.r * light.x, color.g * light.y, color.b * light.z, color.a);
 
 						if (color.a != 0)
 						{
@@ -1095,8 +1352,8 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 
 							depthBuffer[y * width + x] = transform.y;
 
-							sf::Uint8 highByte = (sprites[i]->uid >> 8) & 0xFF;
-							sf::Uint8 lowByte = (sprites[i]->uid >> 0) & 0xFF;
+							sf::Uint8 highByte = (sprites[i]->id >> 8) & 0xFF;
+							sf::Uint8 lowByte = (sprites[i]->id >> 0) & 0xFF;
 							sf::Uint8 flags = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
 
 							BIT_SET(flags, 0);
@@ -1135,9 +1392,17 @@ Tile Map::getTile(int x, int y)
 	}
 }
 
+Tile * Map::getTilePtr(int x, int y)
+{
+	return &tiles[y * map_width + x];
+}
+
 void Map::updateLighting()
 {
-	// Delete all lights and apply skylight
+
+	
+
+	// Apply skylight
 	for (size_t y = 0; y < (size_t)map_height; y++)
 	{
 		for (size_t x = 0; x < (size_t)map_width; x++)
@@ -1145,20 +1410,148 @@ void Map::updateLighting()
 			Tile* tile = &tiles[y * map_width + x];
 			if (tile->ceilingID == 0 && (tile->tileType != Tile::WALL))
 			{
-				tile->light = sf::Color(255, 255, 255);
+				tile->setAllLights(sf::Vector3f(1.0f, 1.0f, 1.0f));
 			}
 			else
 			{
-				tile->light = sf::Color(0, 0, 0);
+				tile->setAllLights(sf::Vector3f(0.0f, 0.0f, 0.0f));
 			}
-
-			tile->prevLight = tile->light;
-			tile->startLight = tile->light;
 		}
 	}
 	
-	// Apply entity lights
-	// TODO
+	// Apply lights
+	for (size_t i = 0; i < lights.size(); i++)
+	{
+		if (!(lights[i]->pos.x >= 1.0f && lights[i]->pos.y >= 1.0f && lights[i]->pos.x < (float)map_width && lights[i]->pos.y < (float)map_height))
+		{
+			continue;
+		}
+
+		if (lights[i]->type == Light::POINT)
+		{
+			// We interpolate in all directions
+			// to smooth everything out
+
+			sf::Vector2f subPos = lights[i]->pos - sf::Vector2f(floorf(lights[i]->pos.x), floorf(lights[i]->pos.y));
+			int pX = (int)lights[i]->pos.x; int pY = (int)lights[i]->pos.y;
+
+			float att = lights[i]->attenuation;
+
+			float cDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(0.5f, 0.5f)) * att), 1.0f);
+			float uDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(0.5f, -0.5f)) * att), 1.0f);
+			float rDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(1.5f, 0.5f)) * att), 1.0f);
+			float dDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(0.5f, 1.5f)) * att), 1.0f);
+			float lDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(-0.5f, 0.5f)) * att), 1.0f);
+			float urDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(1.5f, -0.5f)) * att), 1.0f);
+			float ulDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(-0.5f, -0.5f)) * att), 1.0f);
+			float drDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(1.5f, 1.5f)) * att), 1.0f);
+			float dlDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(-0.5f, 1.5f)) * att), 1.0f);
+
+			tiles[(pY + 0) * map_width + (pX + 0)].setAllLights(lights[i]->light * cDistInv);
+			tiles[(pY - 1) * map_width + (pX + 0)].setAllLights(lights[i]->light * uDistInv);
+			tiles[(pY + 0) * map_width + (pX + 1)].setAllLights(lights[i]->light * rDistInv);
+			tiles[(pY + 1) * map_width + (pX + 0)].setAllLights(lights[i]->light * dDistInv);
+			tiles[(pY + 0) * map_width + (pX - 1)].setAllLights(lights[i]->light * lDistInv);
+			tiles[(pY - 1) * map_width + (pX + 1)].setAllLights(lights[i]->light * urDistInv);
+			tiles[(pY - 1) * map_width + (pX - 1)].setAllLights(lights[i]->light * ulDistInv);
+			tiles[(pY + 1) * map_width + (pX + 1)].setAllLights(lights[i]->light * drDistInv);
+			tiles[(pY + 1) * map_width + (pX - 1)].setAllLights(lights[i]->light * dlDistInv);
+		}
+		else if (lights[i]->type == Light::AREA)
+		{
+			for (float theta = 0; theta < 2.0f * PI; theta += 0.1f)
+			{
+				// Direction vector
+				sf::Vector2f direction;
+				direction.x = sin(theta);
+				direction.y = cos(theta);
+
+				sf::Vector2f rayDir = direction;
+
+				sf::Vector2i map = sf::Vector2i((int)lights[i]->pos.x, (int)lights[i]->pos.y);
+
+				sf::Vector2f sideDist;
+
+				sf::Vector2f deltaDist;
+				deltaDist.x = std::abs(1.0f / rayDir.x);
+				deltaDist.y = std::abs(1.0f / rayDir.y);
+
+				sf::Vector2i step;
+
+				Tile* hit = getTilePtr(map.x, map.y);
+				int side = 0; //< Side of the hit
+
+				// Set the origin light
+				hit->setAllLights(lights[i]->light * 1.0f);
+
+				// Calculate step and sideDist
+				if (rayDir.x < 0)
+				{
+					step.x = -1;
+					sideDist.x = (lights[i]->pos.x - map.x) * deltaDist.x;
+				}
+				else
+				{
+					step.x = 1;
+					sideDist.x = (map.x + 1.0f - lights[i]->pos.x) * deltaDist.x;
+				}
+
+				if (rayDir.y < 0)
+				{
+					step.y = -1;
+					sideDist.y = (lights[i]->pos.y - map.y) * deltaDist.y;
+				}
+				else
+				{
+					step.y = 1;
+					sideDist.y = (map.y + 1.0f - lights[i]->pos.y) * deltaDist.y;
+				}
+
+				bool run = true;
+
+
+				while (run)
+				{
+					if (sideDist.x < sideDist.y)
+					{
+						sideDist.x += deltaDist.x;
+						map.x += step.x;
+						side = 0;
+					}
+					else
+					{
+						sideDist.y += deltaDist.y;
+						map.y += step.y;
+						side = 1;
+					}
+
+					float dist = thor::length(sf::Vector2f(map.x + 0.5f, map.y + 0.5f) - lights[i]->pos);
+
+					if (map.x >= map_width || map.y >= map_height || map.x < 0 || map.y < 0 || dist > lights[i]->maxDist)
+					{
+						run = false;
+						break;
+					}
+
+					float power = (-dist + lights[i]->maxDist) / lights[i]->maxDist;
+
+					hit = getTilePtr(map.x, map.y);
+
+					if (hit->transparent)
+					{
+						hit->setAllLights(lights[i]->light * power);
+					}
+					else
+					{
+						run = false;
+					}
+				}
+
+
+			}
+		}
+	}
+	
 
 	// Propagate
 	for (size_t i = 0; i < MAP_LIGHT_PROPAGATION; i++)
@@ -1169,10 +1562,14 @@ void Map::updateLighting()
 			{
 
 				Tile* tile = &tiles[y * map_width + x];
+
+
 				if (tile->ceilingID == 0)
 				{
 					continue;
 				}
+
+
 
 				// We only propagate if we are transparent
 				// or we are not a full block
@@ -1199,16 +1596,16 @@ void Map::updateLighting()
 						l = tiles[(y + 0) * map_width + (x - 1)];
 					}
 
-					sf::Vector3f starting = sf::Vector3f(tile->light.r, tile->light.g, tile->light.b);
+					sf::Vector3f starting = tile->light;
 					float startingLength = thor::length(starting);
 					sf::Vector3f surroundingAverage = sf::Vector3f(0.0f, 0.0f, 0.0f);
 					int rcount = 0, gcount = 0, bcount = 0;
 
-					sf::Vector3f uv = sf::Vector3f(u.prevLight.r, u.prevLight.g, u.prevLight.b);
-					sf::Vector3f dv = sf::Vector3f(d.prevLight.r, d.prevLight.g, d.prevLight.b);
-					sf::Vector3f rv = sf::Vector3f(r.prevLight.r, r.prevLight.g, r.prevLight.b);
-					sf::Vector3f lv = sf::Vector3f(l.prevLight.r, l.prevLight.g, l.light.b);
-					sf::Vector3f sv = sf::Vector3f(tile->prevLight.r, tile->prevLight.g, tile->prevLight.b);
+					sf::Vector3f uv = sf::Vector3f(u.prevLight.x, u.prevLight.y, u.prevLight.z);
+					sf::Vector3f dv = sf::Vector3f(d.prevLight.x, d.prevLight.y, d.prevLight.z);
+					sf::Vector3f rv = sf::Vector3f(r.prevLight.x, r.prevLight.y, r.prevLight.z);
+					sf::Vector3f lv = sf::Vector3f(l.prevLight.x, l.prevLight.y, l.prevLight.z);
+					sf::Vector3f sv = sf::Vector3f(tile->prevLight.x, tile->prevLight.y, tile->prevLight.z);
 					
 					/*if (thor::length(uv) >= startingLength) {surroundingAverage += uv; count++;}
 					if (thor::length(dv) >= startingLength) { surroundingAverage += dv; count++; }
@@ -1244,15 +1641,15 @@ void Map::updateLighting()
 					surroundingAverage.z /= (float)bcount;
 
 					// We cannot lose light
-					if (thor::length(surroundingAverage) > startingLength)
-					{
-						tile->light = sf::Color(std::min(surroundingAverage.x, 255.0f), std::min(surroundingAverage.y, 255.0f), std::min(surroundingAverage.z, 255.0f));
-					}
+					//if (thor::length(surroundingAverage) > startingLength)
+					//{
+						tile->light = sf::Vector3f(std::min(surroundingAverage.x, 1.0f), std::min(surroundingAverage.y, 1.0f), std::min(surroundingAverage.z, 1.0f));
+					//}
 					// If we are exposed to sunlight, saturate
-					if (tile->startLight != sf::Color(0, 0, 0))
-					{
-						tile->light = tile->startLight;
-					}
+					//if (tile->startLight != sf::Vector3f(0.0f, 0.0f, 0.0f))
+					//{
+					//	tile->light = tile->startLight;
+					//}
 				}
 			}
 		}
@@ -1341,6 +1738,62 @@ void Map::update(float dt, bool lighting)
 	}
 }
 
+void getLightHelper(Tile tile, sf::Vector3f* additive, float* divider, sf::Vector2f subPos, sf::Vector2f tilePos)
+{
+	if (tile.transparent)
+	{
+		sf::Vector2f diff = subPos - tilePos;
+		float dist = std::max(thor::squaredLength(diff), 1.0f);
+		float inverseDist = std::min(1.0f / dist, 1.0f);
+		*additive += tile.light * inverseDist;
+		*divider += inverseDist;
+	}
+}
+
+sf::Vector3f Map::getLight(sf::Vector2f pos)
+{
+
+	int pX = (int)pos.x;
+	int pY = (int)pos.y;
+
+	sf::Vector2f subPos = pos - sf::Vector2f(floorf(pos.x), floorf(pos.y));
+
+	sf::Vector3f additive = sf::Vector3f(0.0f, 0.0f, 0.0f);
+	float divider = 0.0f;
+
+	Tile tile = getTile(pX, pY);
+
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(0.5f, 0.5f));
+
+	tile = getTile(pX, pY - 1);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(0.5f, -0.5f));
+
+	tile = getTile(pX, pY + 1);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(0.5f, 1.5f));
+
+	tile = getTile(pX - 1, pY);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(-0.5f, 0.5f));
+
+	tile = getTile(pX + 1, pY);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(1.5f, 0.5f));
+
+	// Diagonal
+	/*tile = getTile(pX - 1, pY - 1);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(-0.5f, -0.5f));
+
+	tile = getTile(pX + 1, pY - 1);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(1.5f, -0.5f));
+
+	tile = getTile(pX - 1, pY + 1);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(-0.5f, 1.5f));
+
+	tile = getTile(pX + 1, pY + 1);
+	getLightHelper(tile, &additive, &divider, subPos, sf::Vector2f(1.5f, 1.5f));*/
+
+	return additive / divider;
+
+}
+
 sf::Image rotate90(sf::Image* original)
 {
 	sf::Image out;
@@ -1396,6 +1849,7 @@ Map::Map(size_t width, size_t height)
 				tiles[y * map_width + x].tileType = Tile::WALL;
 				tiles[y * map_width + x].texID = 6;
 				tiles[y * map_width + x].walkable = false;
+				tiles[y * map_width + x].transparent = false;
 			}
 		}
 	}

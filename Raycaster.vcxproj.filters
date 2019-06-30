@@ -118,6 +118,9 @@
     <ClInclude Include="Source\Map\Entities\Tile\ESimpleDoor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Map\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="client.log" />

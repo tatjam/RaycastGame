@@ -5,6 +5,7 @@
 #include <Dependency/json.hpp>
 #include "Sprite.h"
 #include "Tile.h"
+#include "Light.h"
 
 #ifndef PI
 #define PI 3.14159265358979323f
@@ -12,7 +13,7 @@
 
 #define MAP_SHADOW_FADE 0.4f
 #define MAP_SHADOW_INTENSE 0.333f
-#define MAP_LIGHT_PROPAGATION 6
+#define MAP_LIGHT_PROPAGATION 2
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
@@ -36,6 +37,7 @@ using namespace nlohmann;
 
 #define DRAW_SKIP 1
 
+
 class Map
 {
 private:
@@ -47,6 +49,7 @@ private:
 	int prev_width, prev_height;
 
 	uint16_t spriteUID;
+	uint16_t lightUID;
 
 	// All these draw functions return true
 	// if we must continue casting the ray
@@ -57,8 +60,12 @@ private:
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
 
-	bool drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirOverride, sf::Vector2i& step, int& side, int realSide, size_t& x, sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir,
-		sf::Vector2i& map, float& perpWallDist, int& height,
+	bool drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirOverride, sf::Vector2i& step, int& side, int realSide, size_t& x, 
+		sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir, sf::Vector2i& map, float& perpWallDist, int& height,
+		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
+
+	bool drawColumn(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t& x, 
+		sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir, sf::Vector2i& map, float& perpWallDist, int& height,
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
 	// Floor and ceiling drawing is done 
@@ -95,6 +102,7 @@ public:
 
 	std::vector<Tile> tiles;
 	std::vector<Sprite*> sprites;
+	std::vector<Light*> lights;
 
 	sf::Image tileset;
 	sf::Image skybox;
@@ -106,15 +114,32 @@ public:
 	void draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDistance = 0.66f);
 
 	Tile getTile(int x, int y);
+	// Has no safety checks
+	Tile* getTilePtr(int x, int y);
 
 	void updateLighting();
 
 	void update(float dt, bool lighting = true);
 
+	// Interpolates light linearly between surrounding 
+	// tiles. Used for rendering sprites
+	sf::Vector3f getLight(sf::Vector2f pos);
+
+	sf::Vector3f getLight(float x, float y)
+	{
+		return getLight(sf::Vector2f(x, y));
+	}
+
 	uint16_t getSpriteUID()
 	{
 		spriteUID++;
 		return spriteUID;
+	}
+
+	uint16_t getLightUID()
+	{
+		lightUID++;
+		return lightUID;
 	}
 
 	json serialize();

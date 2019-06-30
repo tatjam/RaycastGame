@@ -74,6 +74,9 @@ void World::start()
 	{
 		entities[i]->start();
 	}
+
+
+
 }
 
 void World::update(float dt)
@@ -215,7 +218,7 @@ Sprite* World::findSprite(uint32_t sprite_id)
 {
 	for (size_t i = 0; i < map->sprites.size(); i++)
 	{
-		if (map->sprites[i]->uid == sprite_id)
+		if (map->sprites[i]->id == sprite_id)
 		{
 			return map->sprites[i];
 		}
@@ -230,7 +233,7 @@ World::World()
 	clientUID = UINT32_MAX;
 	map = NULL;
 	started = false;
-	lightingInterval = 0.1f;
+	lightingInterval = 0.05f;
 	lightingTimer = lightingInterval;
 }
 

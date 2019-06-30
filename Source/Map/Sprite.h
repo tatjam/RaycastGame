@@ -16,7 +16,7 @@ struct Sprite
 	uint32_t linked_entity;
 
 	// Local to the map, not synchronized, just used for picking
-	uint16_t uid;
+	uint16_t id;
 
 	Sprite(uint32_t nuid)
 	{
@@ -27,6 +27,6 @@ struct Sprite
 		scale = 1.0f;
 		vOffset = 0.0f;
 		linked_entity = 0;
-		uid = nuid;
+		id = nuid;
 	}
 };

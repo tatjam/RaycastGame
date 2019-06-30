@@ -191,6 +191,15 @@ void Client::play()
 
 	bool wasMouseClicked = false;
 
+	// TODO: Remove this
+	Light* nLight = new Light(world.map->getLightUID());
+	nLight->light = sf::Vector3f(0.5f, 0.5f, 0.5f);
+	nLight->type = Light::AREA;
+	nLight->maxDist = 5.0f;
+	nLight->pos = sf::Vector2f(2.5f, 2.5f);
+	nLight->attenuation = 8.0f;
+	world.map->lights.push_back(nLight);
+
 	while (win->isOpen())
 	{
 		sf::Event event;
@@ -277,6 +286,12 @@ void Client::play()
 
 
 		world.update(dt);
+
+		SpriteEntity* other = (SpriteEntity*)world.findEntity(3);
+		if (other)
+		{
+			nLight->pos = other->getSprite()->pos;
+		}
 
 		if (controlledEntityPtr != NULL)
 		{
