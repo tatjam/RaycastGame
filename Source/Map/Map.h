@@ -25,7 +25,7 @@
 
 #define TEX_PREC 16.0f
 
-#define MAP_THREAD_COUNT 2
+#define MAP_THREAD_COUNT 1
 
 
 using namespace nlohmann;
@@ -46,6 +46,10 @@ private:
 	uint16_t spriteUID;
 	uint16_t lightUID;
 
+
+
+public:
+
 	// All these draw functions return true
 	// if we must continue casting the ray
 	// They take a huge ammount of arguments because they are kind of "inlined"
@@ -55,11 +59,11 @@ private:
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
 
-	bool drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirOverride, sf::Vector2i& step, int& side, int realSide, size_t& x, 
+	bool drawThin(Tile hit, sf::Vector2f rayOverride, sf::Vector2f rayDirOverride, sf::Vector2i& step, int& side, int realSide, size_t& x,
 		sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir, sf::Vector2i& map, float& perpWallDist, int& height,
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
-	bool drawColumn(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t& x, 
+	bool drawColumn(Tile hit, sf::Vector2i& step, int& side, int realSide, size_t& x,
 		sf::Vector2f& pos, sf::Vector2f& rayDir, sf::Vector2f& camDir, sf::Vector2i& map, float& perpWallDist, int& height,
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
@@ -71,7 +75,6 @@ private:
 		int& width, const sf::Uint8* tilesetPixels, int& tilesetWidth, const sf::Uint8* skyboxPixels);
 
 
-public:
 
 	// r = Rough texture position, to be seen as a float
 	//		76543210

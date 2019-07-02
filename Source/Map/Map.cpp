@@ -1036,6 +1036,135 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 	}
 }
 
+void drawThreadFunc(Map* mapPtr, sf::Vector2f direction, sf::Vector2f screenPlane, float viewPlaneDist, int width, int height, sf::Vector2f pos, 
+	const sf::Uint8* tilesetPixels, int tilesetWidth, const sf::Uint8* skyboxPixels, size_t startX, size_t endX)
+{
+	for (size_t x = startX; x < endX; x++)
+	{
+		float cameraX = (float)(2 * x / (float)width) - 1;
+		sf::Vector2f rayDir = direction * viewPlaneDist + screenPlane * cameraX;
+
+		sf::Vector2i map = sf::Vector2i((int)pos.x, (int)pos.y);
+
+		sf::Vector2f sideDist;
+
+		sf::Vector2f deltaDist;
+		deltaDist.x = std::abs(1.0f / rayDir.x);
+		deltaDist.y = std::abs(1.0f / rayDir.y);
+		float perpWallDist;
+
+		sf::Vector2i step;
+
+		Tile hit = Tile();
+		int side = 0; //< Side of the hit
+
+		// Calculate step and sideDist
+		if (rayDir.x < 0)
+		{
+			step.x = -1;
+			sideDist.x = (pos.x - map.x) * deltaDist.x;
+		}
+		else
+		{
+			step.x = 1;
+			sideDist.x = (map.x + 1.0f - pos.x) * deltaDist.x;
+		}
+
+		if (rayDir.y < 0)
+		{
+			step.y = -1;
+			sideDist.y = (pos.y - map.y) * deltaDist.y;
+		}
+		else
+		{
+			step.y = 1;
+			sideDist.y = (map.y + 1.0f - pos.y) * deltaDist.y;
+		}
+
+		bool run = true;
+
+		if (mapPtr->getTile(map.x, map.y).tileType == Tile::THIN)
+		{
+			sf::Vector2f rayOverride = pos - sf::Vector2f(map.x, map.y);
+			sf::Vector2f rayDirOverride = rayDir;
+
+			// We need to draw it because you can get inside them
+			mapPtr->drawThin(mapPtr->getTile(map.x, map.y), rayOverride, rayDirOverride, step, side, 0, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+		}
+
+
+
+		while (run)
+		{
+			if (sideDist.x < sideDist.y)
+			{
+				sideDist.x += deltaDist.x;
+				map.x += step.x;
+				side = 0;
+			}
+			else
+			{
+				sideDist.y += deltaDist.y;
+				map.y += step.y;
+				side = 1;
+			}
+
+			hit = mapPtr->getTile(map.x, map.y);
+
+			int realSide = 0;
+			if (side == 1)
+			{
+				if (rayDir.y >= 0)
+				{
+					realSide = 0;
+				}
+				else
+				{
+					realSide = 2;
+				}
+			}
+
+			if (side == 0)
+			{
+				if (rayDir.x >= 0)
+				{
+					realSide = 3;
+				}
+				else
+				{
+					realSide = 1;
+				}
+			}
+
+			if (side == 0)
+			{
+				perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
+			}
+			else
+			{
+				perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
+			}
+
+			if (hit.tileType == Tile::WALL)
+			{
+				run = mapPtr->drawWall(hit, step, side, realSide, x, pos, rayDir, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+			}
+			else if (hit.tileType == Tile::THIN)
+			{
+				run = mapPtr->drawThin(hit, sf::Vector2f(-1.0f, -1.0f), sf::Vector2f(-1.0f, -1.0f), step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+			}
+			else if (hit.tileType == Tile::COLUMN)
+			{
+				run = mapPtr->drawColumn(hit, step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
+			}
+		}
+
+
+	}
+
+	//LOG(INFO) << "Thread done";
+}
+
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)
 {
 
@@ -1094,128 +1223,36 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 	screenPlane.x = sin(angle + PI * 0.5f);
 	screenPlane.y = cos(angle + PI * 0.5f);
 
-	for (size_t x = 0; x < target->getSize().x; x++)
+	if (MAP_THREAD_COUNT == 1)
 	{
-		float cameraX = (float)(2 * x / (float)width) - 1;
-		sf::Vector2f rayDir = direction * viewPlaneDist + screenPlane * cameraX;
-		
-		sf::Vector2i map = sf::Vector2i((int)pos.x, (int)pos.y);
-
-		sf::Vector2f sideDist;
-
-		sf::Vector2f deltaDist; 
-		deltaDist.x = std::abs(1.0f / rayDir.x);
-		deltaDist.y = std::abs(1.0f / rayDir.y);
-		float perpWallDist;
-
-		sf::Vector2i step;
-
-		Tile hit = Tile();
-		int side = 0; //< Side of the hit
-		
-		// Calculate step and sideDist
-		if (rayDir.x < 0)
-		{
-			step.x = -1;
-			sideDist.x = (pos.x - map.x) * deltaDist.x;
-		}
-		else
-		{
-			step.x = 1;
-			sideDist.x = (map.x + 1.0f - pos.x) * deltaDist.x;
-		}
-
-		if (rayDir.y < 0)
-		{
-			step.y = -1;
-			sideDist.y = (pos.y - map.y) * deltaDist.y;
-		}
-		else
-		{
-			step.y = 1;
-			sideDist.y = (map.y + 1.0f - pos.y) * deltaDist.y;
-		}
-
-		bool run = true;
-
-		if (getTile(map.x, map.y).tileType == Tile::THIN)
-		{
-			sf::Vector2f rayOverride = pos - sf::Vector2f(map.x, map.y);
-			sf::Vector2f rayDirOverride = rayDir;
-
-			// We need to draw it because you can get inside them
-			drawThin(getTile(map.x, map.y), rayOverride, rayDirOverride, step, side, 0, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
-		}
-
-
-
-		while (run)
-		{
-			if (sideDist.x < sideDist.y)
-			{
-				sideDist.x += deltaDist.x; 
-				map.x += step.x;
-				side = 0;
-			}
-			else
-			{
-				sideDist.y += deltaDist.y;
-				map.y += step.y;
-				side = 1;
-			}
-
-			hit = getTile(map.x, map.y);
-
-			int realSide = 0;
-			if (side == 1)
-			{
-				if (rayDir.y >= 0)
-				{
-					realSide = 0;
-				}
-				else
-				{
-					realSide = 2;
-				}
-			}
-
-			if (side == 0)
-			{
-				if (rayDir.x >= 0)
-				{
-					realSide = 3;
-				}
-				else
-				{
-					realSide = 1;
-				}
-			}
-
-			if (side == 0)
-			{
-				perpWallDist = ((float)map.x - pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
-			}
-			else
-			{
-				perpWallDist = ((float)map.y - pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
-			}
-
-			if (hit.tileType == Tile::WALL)
-			{
-				run = drawWall(hit, step, side, realSide, x, pos, rayDir, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
-			}
-			else if (hit.tileType == Tile::THIN)
-			{
-				run = drawThin(hit, sf::Vector2f(-1.0f, -1.0f), sf::Vector2f(-1.0f, -1.0f), step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
-			}
-			else if(hit.tileType == Tile::COLUMN)
-			{
-				run = drawColumn(hit, step, side, realSide, x, pos, rayDir, direction, map, perpWallDist, height, width, tilesetPixels, tilesetWidth, skyboxPixels);
-			}
-		}
-
-
+		drawThreadFunc(this, direction, screenPlane, viewPlaneDist, width, height, pos, tilesetPixels, tilesetWidth, skyboxPixels, 0, width);
 	}
+	else
+	{
+
+		std::vector<std::thread*> threads;
+
+		// Launch all threads
+		for (size_t i = 0; i < MAP_THREAD_COUNT; i++)
+		{
+
+			size_t startX = i * (width / MAP_THREAD_COUNT);
+			size_t endX = std::min((i + 1) * (width / MAP_THREAD_COUNT), (size_t)width);
+			//LOG(INFO) << "Thread " << i << " works from " << startX << " to " << endX;
+			std::thread* nthread = new std::thread(drawThreadFunc, this, direction, screenPlane, viewPlaneDist, width, height, pos, tilesetPixels, tilesetWidth, skyboxPixels, startX, endX);
+
+			threads.push_back(nthread);
+		}
+
+		//LOG(INFO) << "All threads done";
+
+		for (size_t i = 0; i < MAP_THREAD_COUNT; i++)
+		{
+			threads[i]->join();
+			delete threads[i];
+		}
+	}
+
 
 	// Draw sprites
 
