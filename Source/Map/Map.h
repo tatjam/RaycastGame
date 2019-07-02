@@ -7,6 +7,7 @@
 #include "Tile.h"
 #include "Light.h"
 #include "../Utils.h"
+#include <thread>
 
 #ifndef PI
 #define PI 3.14159265358979323f
@@ -23,6 +24,8 @@
 #define BIT_CHANGE(a, b, v) ((a ^= (-v ^ a) & (1UL << b)))
 
 #define TEX_PREC 16.0f
+
+#define MAP_THREAD_COUNT 2
 
 
 using namespace nlohmann;

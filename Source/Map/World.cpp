@@ -90,6 +90,7 @@ void World::update(float dt)
 		light = true;
 	}
 
+	
 	map->update(dt, light);
 
 	for (size_t i = 0; i < entities.size(); i++)

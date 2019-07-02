@@ -1039,6 +1039,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)
 {
 
+
 	const sf::Uint8* tilesetPixels = tileset.getPixelsPtr();
 	const sf::Uint8* skyboxPixels = skybox.getPixelsPtr();
 	int tilesetWidth = tileset.getSize().x;
