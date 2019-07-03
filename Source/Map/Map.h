@@ -8,6 +8,7 @@
 #include "Light.h"
 #include "../Utils.h"
 #include <thread>
+#include <condition_variable>
 
 #ifndef PI
 #define PI 3.14159265358979323f
@@ -25,11 +26,19 @@
 
 #define TEX_PREC 16.0f
 
-#define MAP_THREAD_COUNT_CLIENT 3
+// If this is very big the main thread will stall and feel lagged, keep it less than
+// the CPU core count - 1. 
+// TODO: Make this a setting
+// TODO: Another optimization would be to use the main thread for rendering, too
+#define MAP_THREAD_COUNT_CLIENT 2
 
 
 using namespace nlohmann;
 
+// Could be used on extremely low end PCs to maintain good
+// framerate. Skips rows when drawing the floor and ceiling
+// which results in a "scanline" drawing that's only noticeable
+// when rotating or moving fast
 #define DRAW_SKIP 1
 
 
@@ -48,7 +57,10 @@ struct MapAllThreadsData
 
 struct MapThreadData
 {
-	bool run;
+	// Used for the wakeUp call
+	std::mutex mtx;
+	std::condition_variable wakeUp;
+	bool isRunning;
 	size_t startX;
 	size_t endX;
 	bool finish;

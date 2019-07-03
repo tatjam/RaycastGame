@@ -89,7 +89,7 @@ struct Tile
 	bool walkable;
 
 	int floorID;
-	// 0 here means skybox (TODO
+	// 0 = Skybox, not really used in the game, but implemented
 	int ceilingID;
 
 	bool reflectiveFloor;

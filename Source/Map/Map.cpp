@@ -1040,142 +1040,148 @@ void drawThreadFunc(Map* mapPtr, MapThreadData* ourData, MapAllThreadsData* allD
 {
 	do
 	{
-		while (ourData->run)
+		std::unique_lock<std::mutex> lk(ourData->mtx);
+
+		while (!ourData->isRunning)
 		{
-			for (size_t x = ourData->startX; x < ourData->endX; x++)
+			ourData->wakeUp.wait(lk);
+		}
+
+		ourData->isRunning = true;
+
+		for (size_t x = ourData->startX; x < ourData->endX; x++)
+		{
+			float cameraX = (float)(2 * x / (float)allData->width) - 1;
+			sf::Vector2f rayDir = allData->direction * allData->viewPlaneDist + allData->screenPlane * cameraX;
+
+			sf::Vector2i map = sf::Vector2i((int)allData->pos.x, (int)allData->pos.y);
+
+			sf::Vector2f sideDist;
+
+			sf::Vector2f deltaDist;
+			deltaDist.x = std::abs(1.0f / rayDir.x);
+			deltaDist.y = std::abs(1.0f / rayDir.y);
+			float perpWallDist;
+
+			sf::Vector2i step;
+
+			Tile hit = Tile();
+			int side = 0; //< Side of the hit
+
+			// Calculate step and sideDist
+			if (rayDir.x < 0)
 			{
-				float cameraX = (float)(2 * x / (float)allData->width) - 1;
-				sf::Vector2f rayDir = allData->direction * allData->viewPlaneDist + allData->screenPlane * cameraX;
-
-				sf::Vector2i map = sf::Vector2i((int)allData->pos.x, (int)allData->pos.y);
-
-				sf::Vector2f sideDist;
-
-				sf::Vector2f deltaDist;
-				deltaDist.x = std::abs(1.0f / rayDir.x);
-				deltaDist.y = std::abs(1.0f / rayDir.y);
-				float perpWallDist;
-
-				sf::Vector2i step;
-
-				Tile hit = Tile();
-				int side = 0; //< Side of the hit
-
-				// Calculate step and sideDist
-				if (rayDir.x < 0)
-				{
-					step.x = -1;
-					sideDist.x = (allData->pos.x - map.x) * deltaDist.x;
-				}
-				else
-				{
-					step.x = 1;
-					sideDist.x = (map.x + 1.0f - allData->pos.x) * deltaDist.x;
-				}
-
-				if (rayDir.y < 0)
-				{
-					step.y = -1;
-					sideDist.y = (allData->pos.y - map.y) * deltaDist.y;
-				}
-				else
-				{
-					step.y = 1;
-					sideDist.y = (map.y + 1.0f - allData->pos.y) * deltaDist.y;
-				}
-
-				bool run = true;
-
-				if (mapPtr->getTile(map.x, map.y).tileType == Tile::THIN)
-				{
-					sf::Vector2f rayOverride = allData->pos - sf::Vector2f((float)map.x, (float)map.y);
-					sf::Vector2f rayDirOverride = rayDir;
-
-					// We need to draw it because you can get inside them
-					mapPtr->drawThin(mapPtr->getTile(map.x, map.y), rayOverride, rayDirOverride, step, side, 0, x,
-						allData->pos, rayDir, allData->direction, map, perpWallDist, allData->height, allData->width,
-						allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
-				}
-
-
-
-				while (run)
-				{
-					if (sideDist.x < sideDist.y)
-					{
-						sideDist.x += deltaDist.x;
-						map.x += step.x;
-						side = 0;
-					}
-					else
-					{
-						sideDist.y += deltaDist.y;
-						map.y += step.y;
-						side = 1;
-					}
-
-					hit = mapPtr->getTile(map.x, map.y);
-
-					int realSide = 0;
-					if (side == 1)
-					{
-						if (rayDir.y >= 0)
-						{
-							realSide = 0;
-						}
-						else
-						{
-							realSide = 2;
-						}
-					}
-
-					if (side == 0)
-					{
-						if (rayDir.x >= 0)
-						{
-							realSide = 3;
-						}
-						else
-						{
-							realSide = 1;
-						}
-					}
-
-					if (side == 0)
-					{
-						perpWallDist = ((float)map.x - allData->pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
-					}
-					else
-					{
-						perpWallDist = ((float)map.y - allData->pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
-					}
-
-					if (hit.tileType == Tile::WALL)
-					{
-						run = mapPtr->drawWall(hit, step, side, realSide, x, allData->pos, rayDir, map, perpWallDist,
-							allData->height, allData->width, allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
-					}
-					else if (hit.tileType == Tile::THIN)
-					{
-						run = mapPtr->drawThin(hit, sf::Vector2f(-1.0f, -1.0f), sf::Vector2f(-1.0f, -1.0f), step, side, realSide, x,
-							allData->pos, rayDir, allData->direction, map, perpWallDist,
-							allData->height, allData->width, allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
-					}
-					else if (hit.tileType == Tile::COLUMN)
-					{
-						run = mapPtr->drawColumn(hit, step, side, realSide, x, allData->pos, rayDir,
-							allData->direction, map, perpWallDist,
-							allData->height, allData->width, allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
-					}
-				}
-
-		
+				step.x = -1;
+				sideDist.x = (allData->pos.x - map.x) * deltaDist.x;
+			}
+			else
+			{
+				step.x = 1;
+				sideDist.x = (map.x + 1.0f - allData->pos.x) * deltaDist.x;
 			}
 
-			//LOG(INFO) << "Thread " << ourData->threadID << " done";
-			ourData->run = false;
+			if (rayDir.y < 0)
+			{
+				step.y = -1;
+				sideDist.y = (allData->pos.y - map.y) * deltaDist.y;
+			}
+			else
+			{
+				step.y = 1;
+				sideDist.y = (map.y + 1.0f - allData->pos.y) * deltaDist.y;
+			}
 
+			bool run = true;
+
+			if (mapPtr->getTile(map.x, map.y).tileType == Tile::THIN)
+			{
+				sf::Vector2f rayOverride = allData->pos - sf::Vector2f((float)map.x, (float)map.y);
+				sf::Vector2f rayDirOverride = rayDir;
+
+				// We need to draw it because you can get inside them
+				mapPtr->drawThin(mapPtr->getTile(map.x, map.y), rayOverride, rayDirOverride, step, side, 0, x,
+					allData->pos, rayDir, allData->direction, map, perpWallDist, allData->height, allData->width,
+					allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
+			}
+
+
+
+			while (run)
+			{
+				if (sideDist.x < sideDist.y)
+				{
+					sideDist.x += deltaDist.x;
+					map.x += step.x;
+					side = 0;
+				}
+				else
+				{
+					sideDist.y += deltaDist.y;
+					map.y += step.y;
+					side = 1;
+				}
+
+				hit = mapPtr->getTile(map.x, map.y);
+
+				int realSide = 0;
+				if (side == 1)
+				{
+					if (rayDir.y >= 0)
+					{
+						realSide = 0;
+					}
+					else
+					{
+						realSide = 2;
+					}
+				}
+
+				if (side == 0)
+				{
+					if (rayDir.x >= 0)
+					{
+						realSide = 3;
+					}
+					else
+					{
+						realSide = 1;
+					}
+				}
+
+				if (side == 0)
+				{
+					perpWallDist = ((float)map.x - allData->pos.x + (1 - (float)step.x) / 2.0f) / rayDir.x;
+				}
+				else
+				{
+					perpWallDist = ((float)map.y - allData->pos.y + (1 - (float)step.y) / 2.0f) / rayDir.y;
+				}
+
+				if (hit.tileType == Tile::WALL)
+				{
+					run = mapPtr->drawWall(hit, step, side, realSide, x, allData->pos, rayDir, map, perpWallDist,
+						allData->height, allData->width, allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
+				}
+				else if (hit.tileType == Tile::THIN)
+				{
+					run = mapPtr->drawThin(hit, sf::Vector2f(-1.0f, -1.0f), sf::Vector2f(-1.0f, -1.0f), step, side, realSide, x,
+						allData->pos, rayDir, allData->direction, map, perpWallDist,
+						allData->height, allData->width, allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
+				}
+				else if (hit.tileType == Tile::COLUMN)
+				{
+					run = mapPtr->drawColumn(hit, step, side, realSide, x, allData->pos, rayDir,
+						allData->direction, map, perpWallDist,
+						allData->height, allData->width, allData->tilesetPixels, allData->tilesetWidth, allData->skyboxPixels);
+				}
+			}
+
+		
 		}
+
+		ourData->isRunning = false;
+		//LOG(INFO) << "Thread " << ourData->threadID << " done";
+
 	}
 	while (!ourData->finish);
 
@@ -1256,7 +1262,8 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		MapThreadData data;
 		data.startX = 0;
 		data.endX = width;
-		data.run = true;
+		data.isRunning = true;
+		//data.wakeUp.notify_all(); < Not neccesary
 		data.finish = true;
 		drawThreadFunc(this, &data, &allThreadData);
 	}
@@ -1271,7 +1278,8 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 			
 			threads[i].data->startX = startX;
 			threads[i].data->endX = endX;
-			threads[i].data->run = true;
+			threads[i].data->isRunning = true;
+			threads[i].data->wakeUp.notify_one();
 			threads[i].data->seen = false;
 		}
 
@@ -1282,7 +1290,7 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 		{
 			for (size_t i = 0; i < threadCount; i++)
 			{
-				if (threads[i].data->run == false && threads[i].data->seen == false)
+				if (threads[i].data->isRunning == false && threads[i].data->seen == false)
 				{
 					remaining--;
 					threads[i].data->seen = true;
@@ -1954,7 +1962,7 @@ Map::Map(size_t width, size_t height, size_t threadCount)
 			pack.data = new MapThreadData;
 			pack.data->threadID = i;
 			pack.data->finish = false;
-			pack.data->run = false;
+			//pack.data->run = false;
 
 			std::thread* thread = new std::thread(drawThreadFunc, this, pack.data, &allThreadData);
 			pack.thread = thread;
