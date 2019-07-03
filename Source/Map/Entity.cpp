@@ -148,6 +148,12 @@ Entity* Entity::createFromType(EntityType type, ProgramType* prog, uint32_t uid)
 	{
 		return new ESimpleDoor(prog, uid);
 	}
+	else
+	{
+		LOG(ERROR) << "Attempted to create unimplemented or invalid entity type";
+	}
+
+	return NULL;
 }
 
 

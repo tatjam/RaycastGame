@@ -73,11 +73,11 @@ void DoorEntity::update(float dt)
 
 		if (rightwards)
 		{
-			getTile()->var1 = 128 - state * 128.0f;
+			getTile()->var1 = (uint8_t)(128 - state * 128.0f);
 		}
 		else
 		{
-			getTile()->var1 = 128 + state * 128.0f;
+			getTile()->var1 = (uint8_t)(128 + state * 128.0f);
 		}
 
 		if (state != wantedState)

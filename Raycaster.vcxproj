@@ -77,7 +77,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX ;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ELPP_THREAD_SAFE;NOMINMAX ;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\Programming\enet-1.3.14.tar\enet-1.3.14;D:\Programming\Thor\lib;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ELPP_THREAD_SAFE;NOMINMAX ;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
@@ -171,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h" />
+    <ClInclude Include="Dependency\easylogging++s.h" />
     <ClInclude Include="Source\Map\Entities\Tile\ESimpleDoor.h" />
     <ClInclude Include="Source\Map\Entities\Tile\Bases\DoorEntity.h" />
     <ClInclude Include="Source\Map\Entities\Bases\TileEntity.h" />

@@ -205,7 +205,7 @@ void Server::mainFunc(int argc, char** argv)
 
 void Server::createDefaultWorld()
 {
-	world.map = new Map(16, 16);
+	world.map = new Map(16, 16, 1);
 
 	for (size_t y = 0; y < world.map->map_height; y++)
 	{
@@ -294,7 +294,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 2;
+	targetPlayers = 1;
 }
 
 

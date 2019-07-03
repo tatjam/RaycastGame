@@ -354,6 +354,7 @@ ELPP_INTERNAL_DEBUGGING_OUT_INFO << ELPP_INTERNAL_DEBUGGING_MSG(internalInfoStre
 #include <csignal>
 #include <cerrno>
 #include <cstdarg>
+
 #if defined(ELPP_UNICODE)
 #   include <locale>
 #  if ELPP_OS_WINDOWS

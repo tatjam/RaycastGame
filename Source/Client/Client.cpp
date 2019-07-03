@@ -445,7 +445,7 @@ void Client::play()
 								sf::Sprite cursor; cursor.setTexture(cursorTex);
 								cursor.setOrigin(cursorTex.getSize().x / 2.0f, cursorTex.getSize().y / 2.0f);
 								cursor.setPosition(renderWidth * screenScale * 0.5f, topUiHeight + player->aimElevation * renderHeight * screenScale);
-								cursor.setScale(screenScale, screenScale);
+								cursor.setScale((float)screenScale, (float)screenScale);
 
 								win->draw(cursor);
 							}

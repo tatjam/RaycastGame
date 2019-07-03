@@ -160,9 +160,9 @@ void EPlayer::update(float dt)
 					// This only holds true because we work on a grid!
 					sf::Vector2f currPos = getSprite()->pos;
 					sf::Vector2i currPosRound = sf::Vector2i((int)currPos.x, (int)currPos.y);
-					sf::Vector2i nextPosRound = sf::Vector2i((int)nextPos.x, nextPos.y);
+					sf::Vector2i nextPosRound = sf::Vector2i((int)nextPos.x, (int)nextPos.y);
 					sf::Vector2i wallNormal = currPosRound - nextPosRound;
-					sf::Vector2f wallNormalF = sf::Vector2f(wallNormal.x, wallNormal.y);
+					sf::Vector2f wallNormalF = sf::Vector2f((float)wallNormal.x, (float)wallNormal.y);
 					if (wallNormalF == sf::Vector2f(0, 0))
 					{
 						// We are stuck inside a wall!
@@ -170,7 +170,7 @@ void EPlayer::update(float dt)
 
 						// Move towards nearest side, if it's clear, otherwise find a clear block
 
-						sf::Vector2f subBlock = currPos - sf::Vector2f(currPosRound.x, currPosRound.y);
+						sf::Vector2f subBlock = currPos - sf::Vector2f((float)currPosRound.x, (float)currPosRound.y);
 						sf::Vector2f dir0, dir1;
 						if (subBlock.x < 0.5f)
 						{

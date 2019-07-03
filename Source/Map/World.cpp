@@ -48,7 +48,15 @@ void World::deserialize(json data, ProgramType* prog)
 
 	if (map == NULL)
 	{
-		map = new Map(0, 0);
+		if (prog->isClient())
+		{
+			map = new Map(0, 0, MAP_THREAD_COUNT_CLIENT);
+		}
+		else
+		{
+			map = new Map(0, 0, 1);
+		}
+	
 		map->deserialize(data["map"]);
 	}
 
@@ -133,6 +141,8 @@ Entity* World::createGlobalEntity(uint8_t type, ProgramType* prog)
 
 		return nEntity;
 	}
+
+	return NULL;
 }
 
 Entity* World::createClientEntity(uint8_t type, ProgramType* prog)
@@ -155,6 +165,8 @@ Entity* World::createClientEntity(uint8_t type, ProgramType* prog)
 
 		return nEntity;
 	}
+
+	return NULL;
 }
 
 Entity* World::receiveNewEntity(Packet pak, ProgramType* prog)
@@ -195,6 +207,8 @@ Entity* World::receiveNewEntity(Packet pak, ProgramType* prog)
 	{
 		uid = nuid;
 	}
+
+	return NULL;
 }
 
 Entity* World::findEntity(uint32_t uid)

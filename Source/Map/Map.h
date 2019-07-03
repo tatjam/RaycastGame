@@ -25,13 +25,43 @@
 
 #define TEX_PREC 16.0f
 
-#define MAP_THREAD_COUNT 1
+#define MAP_THREAD_COUNT_CLIENT 3
 
 
 using namespace nlohmann;
 
 #define DRAW_SKIP 1
 
+
+struct MapAllThreadsData
+{
+	sf::Vector2f direction, screenPlane, pos;
+	float viewPlaneDist;
+	int width, height;
+
+	const sf::Uint8* tilesetPixels;
+	int tilesetWidth;
+	
+	const sf::Uint8* skyboxPixels;
+};
+
+
+struct MapThreadData
+{
+	bool run;
+	size_t startX;
+	size_t endX;
+	bool finish;
+	bool seen;
+	size_t threadID;
+};
+
+
+struct MapThreadPack
+{
+	std::thread* thread;
+	MapThreadData* data;
+};
 
 class Map
 {
@@ -46,9 +76,12 @@ private:
 	uint16_t spriteUID;
 	uint16_t lightUID;
 
-
+	std::vector <MapThreadPack> threads;
+	MapAllThreadsData allThreadData;
 
 public:
+
+	size_t threadCount;
 
 	// All these draw functions return true
 	// if we must continue casting the ray
@@ -102,6 +135,7 @@ public:
 	std::vector<Sprite*> sprites;
 	std::vector<Light*> lights;
 
+
 	sf::Image tileset;
 	sf::Image skybox;
 	int tileWidth;
@@ -143,7 +177,7 @@ public:
 	json serialize();
 	void deserialize(json data);
 
-	Map(size_t width, size_t height);
+	Map(size_t width, size_t height, size_t threadCount);
 	~Map();
 };
 
