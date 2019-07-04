@@ -1466,23 +1466,30 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 						sf::Color color = frame.getPixel(texX, texY);
 						color = sf::Color(sf::Uint8(color.r * light.x), sf::Uint8(color.g * light.y), sf::Uint8(color.b * light.z), color.a);
 
-						if (color.a != 0)
+						if (color.a == 255)
 						{
 							setPixelFast(outPixels, x, y, width, color);
 
 							depthBuffer[y * width + x] = transform.y;
-
-							sf::Uint8 highByte = (sprites[i]->id >> 8) & 0xFF;
-							sf::Uint8 lowByte = (sprites[i]->id >> 0) & 0xFF;
-							sf::Uint8 flags = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
-
-							BIT_SET(flags, 0);
-
-							// Set Flags and sprite UID
-							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, highByte);
-							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, lowByte);
-							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, flags);
 						}
+						else
+						{
+							sf::Color prev = getPixelFast(outPixels, x, y, width);
+							sf::Color mix = mixColor(prev, color);
+							setPixelFast(outPixels, x, y, width, mix);
+						}
+
+						// We always set flags, but not depthbuffer
+						sf::Uint8 highByte = (sprites[i]->id >> 8) & 0xFF;
+						sf::Uint8 lowByte = (sprites[i]->id >> 0) & 0xFF;
+						sf::Uint8 flags = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
+
+						BIT_SET(flags, 0);
+
+						// Set Flags and sprite UID
+						setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, highByte);
+						setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, lowByte);
+						setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, flags);
 					}
 				}
 			}
@@ -1962,13 +1969,13 @@ Map::Map(size_t width, size_t height, size_t threadCount)
 			pack.data = new MapThreadData;
 			pack.data->threadID = i;
 			pack.data->finish = false;
+			pack.data->isRunning = false;
 			//pack.data->run = false;
 
 			std::thread* thread = new std::thread(drawThreadFunc, this, pack.data, &allThreadData);
 			pack.thread = thread;
 
 			threads.push_back(pack);
-
 		}
 	}
 

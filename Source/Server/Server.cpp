@@ -294,7 +294,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 1;
+	targetPlayers = 2;
 }
 
 
