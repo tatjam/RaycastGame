@@ -987,9 +987,14 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		BIT_CLEAR(alpha, 4);
 		BIT_CLEAR(alpha, 5);
 
+		sf::Vector2f tCoords;
+		tCoords.x = (float)floorTex.x / (float)tileWidth;
+		tCoords.y = (float)floorTex.y / (float)tileWidth;
+
 		if (currentDist < currentDepthCeiling)
 		{
-
+			// Set TexCoords
+			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
 			// Set coordinate X
 			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, (int)currentFloor.x);
 			// Set coordinate Y
@@ -1017,6 +1022,8 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 
 		if (currentDist < currentDepthFloor)
 		{
+			// Set TexCoords
+			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
 			// Set coordinate X
 			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_G, width, (int)currentFloor.x);
 			// Set coordinate Y
@@ -1479,17 +1486,28 @@ void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlane
 							setPixelFast(outPixels, x, y, width, mix);
 						}
 
-						// We always set flags, but not depthbuffer
-						sf::Uint8 highByte = (sprites[i]->id >> 8) & 0xFF;
-						sf::Uint8 lowByte = (sprites[i]->id >> 0) & 0xFF;
-						sf::Uint8 flags = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
+						if (color.a >= MAP_TRANSPARENT_THRESOLD)
+						{
+							// We always set flags, but not depthbuffer
+							sf::Uint8 highByte = (sprites[i]->id >> 8) & 0xFF;
+							sf::Uint8 lowByte = (sprites[i]->id >> 0) & 0xFF;
+							sf::Uint8 flags = getPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width);
 
-						BIT_SET(flags, 0);
+							BIT_SET(flags, 0);
 
-						// Set Flags and sprite UID
-						setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, highByte);
-						setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, lowByte);
-						setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, flags);
+							// Set Flags and sprite UID
+							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_G, width, highByte);
+							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_B, width, lowByte);
+							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, flags);
+
+							// Set texture offset
+							sf::Vector2f tCoords;
+							// We always divide by height, sprites are square
+							tCoords.x = (float)texX / (float)imgHeight;
+							tCoords.y = (float)texY / (float)imgHeight;
+
+							setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
+						}
 					}
 				}
 			}

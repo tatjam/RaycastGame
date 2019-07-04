@@ -18,6 +18,9 @@
 #define MAP_SHADOW_INTENSE 0.333f
 #define MAP_LIGHT_PROPAGATION 2
 
+// Below this a pixel behaves as if it were alpha = 0
+#define MAP_TRANSPARENT_THRESOLD 10
+
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
 #define BIT_FLIP(a,b) ((a) ^= (1ULL<<(b)))

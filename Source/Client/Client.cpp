@@ -325,7 +325,7 @@ void Client::play()
 				float texX = ((buffer.r >> 4) & 0xF) / 16.0f;
 				float texY = ((buffer.r >> 0) & 0xF) / 16.0f;
 
-				string += "TEXID: " + std::to_string(texX) + ", " + std::to_string(texY) + " | ";
+				string += "UV: " + std::to_string(texX) + ", " + std::to_string(texY) + " | ";
 				if (BIT_CHECK(buffer.a, 0))
 				{
 					string += "Sprite ID ";
