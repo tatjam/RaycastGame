@@ -284,6 +284,9 @@ void EPlayer::update(float dt)
 void EPlayer::start()
 {
 	SpriteEntity::start();
+	addSprite();
+	getSprite()->pos = sf::Vector2f(2.0f, 2.0f);
+
 	setInterpSpeed(EPLAYER_NETFRAMERATE);
 }
 

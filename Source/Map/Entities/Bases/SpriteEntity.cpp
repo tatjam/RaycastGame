@@ -57,30 +57,46 @@ void SpriteEntity::receiveCommand(uint8_t command_id, Packet packet, ENetPeer* p
 	}
 }
 
+void SpriteEntity::addSprite()
+{
+	Map* map = getWorld()->map;
+
+	if (sprite.id == 0)
+	{
+		sprite.id = map->getSpriteUID();
+
+
+		sf::Image demo = sf::Image();
+		demo.loadFromFile("Assets/sprite.png");
+		if (!isControlled())
+		{
+			sprite.frames.push_back(demo);
+			sprite.frame = 0;
+		}
+	}
+
+	map->addSprite(&sprite);
+	spriteInMap = true;
+}
+
+void SpriteEntity::removeSprite()
+{
+	DCHECK_NE(sprite.id, 0) << "Cannot delete a 0 sprite";
+
+	getWorld()->map->removeSprite(sprite.id);
+	spriteInMap = false;
+}
+
 void SpriteEntity::start()
 {
 	LOG(INFO) << "Sprite entity start!";
 
 	Entity::start();
 
-	Map* map = getProg()->getWorld()->map;
+	// Create a 0 id sprite
+	sprite = Sprite(0);
 
-	sprite = Sprite(map->getSpriteUID());
 
-	sf::Image demo = sf::Image();
-	demo.loadFromFile("Assets/sprite.png");
-
-	if (!isControlled())
-	{
-		sprite.frames.push_back(demo);
-		sprite.frame = 0;
-	}
-
-	sprite.pos = sf::Vector2f(4.5f, 3.5f);
-	wantedPos = sprite.pos;
-	oldPos = sprite.pos;
-
-	map->sprites.push_back(getSprite());
 }
 
 void SpriteEntity::update(float dt)

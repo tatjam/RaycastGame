@@ -991,7 +991,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		tCoords.x = (float)floorTex.x / (float)tileWidth;
 		tCoords.y = (float)floorTex.y / (float)tileWidth;
 
-		if (currentDist < currentDepthCeiling)
+		if (currentDist < currentDepthFloor)
 		{
 			// Set TexCoords
 			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
@@ -1002,9 +1002,13 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 			// Set flags
 			setPixelComponentFast(outBufferPixels, x, y, PIXEL_COMP_A, width, alpha);
 
+			// Set depth buffer
+			depthBuffer[y * width + x] = currentDist;
+
+
 		}
 
-		// Mirror (Floor now)
+		// Mirror (Ceiling now)
 
 		// Set ceiling
 		BIT_SET(alpha, 5);
@@ -1020,7 +1024,7 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 		}
 
 
-		if (currentDist < currentDepthFloor)
+		if (currentDist < currentDepthCeiling)
 		{
 			// Set TexCoords
 			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_R, width, encodeTexCoords(tCoords));
@@ -1032,8 +1036,6 @@ void Map::drawFloorAndCeiling(int& side, size_t& x, sf::Vector2f& pos, sf::Vecto
 			setPixelComponentFast(outBufferPixels, x, height - y, PIXEL_COMP_A, width, alpha);
 
 			// Set depth buffer
-			depthBuffer[y * width + x] = currentDist;
-
 			if (at.ceilingID != 0)
 			{
 				depthBuffer[(height - y) * width + x] = currentDist;
@@ -1193,6 +1195,41 @@ void drawThreadFunc(Map* mapPtr, MapThreadData* ourData, MapAllThreadsData* allD
 	while (!ourData->finish);
 
 	//LOG(INFO) << "Thread done";
+}
+
+void Map::addSprite(Sprite* sprite, bool checkID)
+{
+	if (checkID)
+	{
+		for (int i = 0; i < sprites.size(); i++)
+		{
+			if (sprites[i]->id == sprite->id)
+			{
+				LOG(ERROR) << "Tried to add an already existing sprite (ID: " << sprite->id << ")";
+				return;
+			}
+		}
+	}
+
+	sprites.push_back(sprite);
+}
+
+void Map::removeSprite(uint16_t id)
+{
+	int index = -1;
+
+	for (int i = 0; i < sprites.size(); i++)
+	{
+		if (sprites[i]->id == id)
+		{
+			index = i;
+		}
+	}
+
+	if (index >= 0)
+	{
+		sprites.erase(sprites.begin() + index);
+	}
 }
 
 void Map::draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDist)

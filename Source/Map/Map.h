@@ -155,7 +155,10 @@ public:
 	sf::Image skybox;
 	int tileWidth;
 
-
+	// Checks id if asked, you must supply the sprite with an ID before
+	// calling this
+	void addSprite(Sprite* sprite, bool checkID = true);
+	void removeSprite(uint16_t id);
 
 	// Renders the map to a target image from given position and direction
 	void draw(sf::Image* target, sf::Vector2f pos, float angle, float viewPlaneDistance = 0.66f);

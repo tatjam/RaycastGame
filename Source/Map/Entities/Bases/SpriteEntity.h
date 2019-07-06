@@ -30,6 +30,9 @@ private:
 
 	float interpSpeed;
 	float interpTimer;
+
+	bool spriteInMap;
+
 public:
 	
 	void cmdSetSpritePosRot(sf::Vector2f pos, float angle, ENetPeer* peer);
@@ -54,10 +57,18 @@ public:
 		return &sprite;
 	}
 
+	// Adds the sprite to the map, if it has no uid it gets it here
+	void addSprite();
+
+	// Removes the sprite from the world, but keeps the uid
+	void removeSprite();
+
+	bool isSpriteInMap() { return spriteInMap; }
+
 	virtual void start() override;
 	virtual void update(float dt) override;
 
-	SpriteEntity(ProgramType* prog, uint32_t uid) : Entity(prog, uid), sprite(0) { interpTimer = 0.0f; interpSpeed = 1.0f; }
+	SpriteEntity(ProgramType* prog, uint32_t uid) : Entity(prog, uid), sprite(0) { interpTimer = 0.0f; interpSpeed = 1.0f; spriteInMap = false; }
 	~SpriteEntity() {}
 };
 

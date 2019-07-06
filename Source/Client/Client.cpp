@@ -159,8 +159,10 @@ void Client::play()
 	int renderHeight = 256;
 	int screenScale = 2;
 #endif
-	int uiHeight = 256;
-	int topUiHeight = 32;
+	int uiScale = 1;
+	int uiHeight = 286 * uiScale;
+	int topUiHeight = 0 * uiScale;
+
 
 	win = new sf::RenderWindow(sf::VideoMode(renderWidth * screenScale, renderHeight * screenScale + uiHeight + topUiHeight), "Raycasting game");
 	//win->setFramerateLimit(60);
