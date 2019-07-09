@@ -12,9 +12,13 @@
 #include "../ProgramType.h"
 #include "../Map/Entities/Bases/SpriteEntity.h"
 
+#include "PlayerHUD.h"
+
 class Client : public ProgramType
 {
 public:
+
+	PlayerHUD playerHUD;
 
 	ENetPeer* server;
 	ENetHost* client;

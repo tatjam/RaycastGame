@@ -71,8 +71,11 @@ public:
 	virtual void onGenericCall(std::string cmd, json args, ENetPeer* peer);
 	// args can be empty
 	void sendGenericCall(ENetPeer* peer, std::string cmd, json args = json());
-
+	// args can be empty
 	void sendGenericCallToAll(std::string cmd, json args = json());
+	// args can be empty
+	void sendGenericCallToAllBut(ENetPeer* exception, std::string cmd, json args = json());
+
 
 	// Dispatches the command to either the client handler or the server handle
 	void receivePacket(Packet packet, ENetPeer* peer);

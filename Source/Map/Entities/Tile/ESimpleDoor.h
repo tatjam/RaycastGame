@@ -12,7 +12,7 @@ public:
 
 	virtual EntityType getEntityType() { return DOOR_SIMPLE; }
 
-	ESimpleDoor(ProgramType* prog, uint32_t uid) : DoorEntity(prog, uid)
+	ESimpleDoor(ProgramType* prog, uint32_t uid) : DoorEntity(prog, uid), Entity(prog, uid)
 	{
 		setOpenSpeed(1.0f);
 		setCloseSpeed(1.0f);

@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dependency\easylogging++.cpp" />
+    <ClCompile Include="Source\Client\PlayerHUD.cpp" />
     <ClCompile Include="Source\Map\Entities\Sprite\Bases\ItemEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\InventoryEntity.cpp" />
     <ClCompile Include="Source\Material\Material.cpp" />
@@ -175,6 +176,8 @@
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h" />
     <ClInclude Include="Dependency\json.hpp" />
+    <ClInclude Include="Source\Client\PlayerHUD.h" />
+    <ClInclude Include="Source\Map\Entities\Bases\InventorySlot.h" />
     <ClInclude Include="Source\Map\Entities\Sprite\Bases\ItemEntity.h" />
     <ClInclude Include="Source\Map\Entities\Bases\InventoryEntity.h" />
     <ClInclude Include="Source\Material\Material.h" />

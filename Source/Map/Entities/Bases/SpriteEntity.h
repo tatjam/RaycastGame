@@ -19,7 +19,7 @@
 // will receive SET_SPRITE_POSROT from it
 // It's up for any override to actually 
 // set the sprite textures, this only creates an empty sprite
-class SpriteEntity : public Entity
+class SpriteEntity : public virtual Entity
 {
 private:
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Bases/SpriteEntity.h"
+#include "Bases/InventoryEntity.h"
 
 // 20 packets per second
 #define EPLAYER_NETFRAMERATE 8
@@ -9,7 +10,7 @@
 #define EPLAYER_MAX_DELTA_ANGLE (PI / 4.5f)
 
 // TODO: Control methods
-class EPlayer : public SpriteEntity
+class EPlayer : public SpriteEntity, public InventoryEntity
 {
 private:
 	bool noclip;
@@ -43,7 +44,7 @@ public:
 	virtual void update(float dt) override;
 	virtual void start() override;
 
-	EPlayer(ProgramType* prog, uint32_t uid) : SpriteEntity(prog, uid) { sendTimer = EPLAYER_NETUPDATE; noclip = false; }
+	EPlayer(ProgramType* prog, uint32_t uid);
 	~EPlayer();
 };
 

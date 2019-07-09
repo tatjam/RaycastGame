@@ -103,6 +103,24 @@ void Entity::sendGenericCallToAll(std::string cmd, json args)
 	}
 }
 
+void Entity::sendGenericCallToAllBut(ENetPeer* exception, std::string cmd, json args)
+{
+	if (getProg()->isClient())
+	{
+		LOG(ERROR) << "Tried to send a generic call to all being a client.";
+		return;
+	}
+
+	auto clients = getProg()->getClients();
+	for (auto client : *clients)
+	{
+		if (client.peer->connectID != exception->connectID)
+		{
+			sendGenericCall(client.peer, cmd, args);
+		}
+	}
+}
+
 void Entity::receivePacket(Packet packet, ENetPeer* peer)
 {
 	uint8_t command_id = packet.popByte();

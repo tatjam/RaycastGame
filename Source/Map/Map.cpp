@@ -1581,9 +1581,6 @@ Tile * Map::getTilePtr(int x, int y)
 
 void Map::updateLighting()
 {
-
-	
-
 	// Apply skylight
 	for (size_t y = 0; y < (size_t)map_height; y++)
 	{

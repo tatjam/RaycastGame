@@ -83,6 +83,9 @@
     <ClCompile Include="Source\Map\Entities\Sprite\Bases\ItemEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Client\PlayerHUD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h">
@@ -146,6 +149,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Map\Entities\Sprite\Bases\ItemEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Map\Entities\Bases\InventorySlot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Client\PlayerHUD.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -73,7 +73,7 @@ public:
 	virtual void deserialize(json j) override;
 
 
-	DoorEntity(ProgramType* prog, uint32_t uid) : TileEntity(prog, uid)
+	DoorEntity(ProgramType* prog, uint32_t uid) : TileEntity(prog, uid), Entity(prog, uid)
 	{
 		state = 0.0f; wantedState = 0.0f;
 	}

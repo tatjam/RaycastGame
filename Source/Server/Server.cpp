@@ -269,10 +269,10 @@ void Server::createDefaultWorld()
 		}
 	}
 
-	ESimpleDoor* door = (ESimpleDoor*)world.createGlobalEntity(Entity::DOOR_SIMPLE, this);
+	ESimpleDoor* door = dynamic_cast<ESimpleDoor*>(world.createGlobalEntity(Entity::DOOR_SIMPLE, this));
 	door->setTilePos(5, 5);
 
-	ESimpleDoor* door2 = (ESimpleDoor*)world.createGlobalEntity(Entity::DOOR_SIMPLE, this);
+	ESimpleDoor* door2 = dynamic_cast<ESimpleDoor*>(world.createGlobalEntity(Entity::DOOR_SIMPLE, this));
 	door2->setTilePos(8, 8);
 }
 

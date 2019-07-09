@@ -5,7 +5,7 @@
 
 class SpriteEntity;
 
-class TileEntity : public Entity
+class TileEntity : public virtual Entity
 {
 private:
 

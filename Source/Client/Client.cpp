@@ -202,18 +202,7 @@ void Client::play()
 	nLight->attenuation = 8.0f;
 	world.map->lights.push_back(nLight);
 
-	sf::Image overlay = sf::Image();
-	overlay.loadFromFile("Assets/overlay.png");
-	overlay = rotate90(&overlay);
-
-	world.map->getTilePtr(9, 8)->overlay = &overlay;
-	world.map->getTilePtr(9, 8)->overlaySides.north = true;
-	world.map->getTilePtr(9, 8)->overlaySides.east = true;
-
-	world.map->getTilePtr(11, 10)->overlay = &overlay;
-	world.map->getTilePtr(11, 10)->overlaySides.floor = true;
-	world.map->getTilePtr(11, 10)->overlaySides.ceiling = true;
-
+	
 
 	while (win->isOpen())
 	{
@@ -245,7 +234,7 @@ void Client::play()
 				// Sets the controlled entity
 				uint32_t uid = pak.popUID();
 				controlledEntity = uid;
-				controlledEntityPtr = (SpriteEntity*)world.findEntity(uid);
+				controlledEntityPtr = dynamic_cast<SpriteEntity*>(world.findEntity(uid));
 
 				LOG(INFO) << "Now controlling entity " << uid;
 			}
@@ -301,8 +290,9 @@ void Client::play()
 
 
 		world.update(dt);
+		playerHUD.update(dt);
 
-		SpriteEntity* other = (SpriteEntity*)world.findEntity(3);
+		SpriteEntity* other = dynamic_cast<SpriteEntity*>(world.findEntity(3));
 		if (other)
 		{
 			nLight->pos = other->getSprite()->pos;
@@ -410,7 +400,7 @@ void Client::play()
 					string += ")";
 
 					Tile at = world.map->getTile(buffer.g, buffer.b);
-					TileEntity* tileEnt = (TileEntity*)world.findEntity(at.linked_entity);
+					TileEntity* tileEnt = dynamic_cast<TileEntity*>(world.findEntity(at.linked_entity));
 
 					if (tileEnt != NULL)
 					{
@@ -462,7 +452,7 @@ void Client::play()
 			}
 		}
 
-
+		playerHUD.draw(screenScale, uiScale, renderHeight);
 
 
 		win->display();
@@ -475,7 +465,7 @@ void Client::play()
 	}
 }
 
-Client::Client()
+Client::Client() : playerHUD(this)
 {
 	controlledEntity = 0;
 	controlledEntityPtr = NULL;

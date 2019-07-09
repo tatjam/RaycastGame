@@ -5,6 +5,7 @@
 void EPlayer::update(float dt)
 {
 	SpriteEntity::update(dt);
+	InventoryEntity::update(dt);
 
 	if (getProg()->isClient())
 	{
@@ -288,6 +289,33 @@ void EPlayer::start()
 	getSprite()->pos = sf::Vector2f(2.0f, 2.0f);
 
 	setInterpSpeed(EPLAYER_NETFRAMERATE);
+}
+
+EPlayer::EPlayer(ProgramType* prog, uint32_t uid) : SpriteEntity(prog, uid), InventoryEntity(prog, uid, { 10, 3 }), Entity(prog, uid)
+{
+	sendTimer = EPLAYER_NETUPDATE; noclip = false;
+
+	// Setup the inventory (we don't sync as this is called on the constructor)
+	setSlotType({ 0, 0 }, InventorySlot::HEAD, false);
+	setSlotType({ 0, 1 }, InventorySlot::TORSO, false);
+	setSlotType({ 0, 2 }, InventorySlot::LEGS, false);
+	setSlotType({ 1, 0 }, InventorySlot::GLASSES, false);
+	setSlotType({ 1, 1 }, InventorySlot::BACKPACK, false);
+	setSlotType({ 1, 2 }, InventorySlot::BELT, false);
+
+	// Disable slots that are disabled by default
+	setTileEnabled({ 4, 0 }, false, false);
+	setTileEnabled({ 5, 0 }, false, false);
+	setTileEnabled({ 6, 0 }, false, false);
+	setTileEnabled({ 7, 0 }, false, false);
+	setTileEnabled({ 8, 0 }, false, false);
+	setTileEnabled({ 9, 0 }, false, false);
+	setTileEnabled({ 4, 1 }, false, false);
+	setTileEnabled({ 5, 1 }, false, false);
+	setTileEnabled({ 6, 1 }, false, false);
+	setTileEnabled({ 7, 1 }, false, false);
+	setTileEnabled({ 8, 1 }, false, false);
+	setTileEnabled({ 9, 1 }, false, false);
 }
 
 EPlayer::~EPlayer()
