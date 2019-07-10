@@ -22,6 +22,9 @@ private:
 
 	bool wasTabPressed;
 
+	void updateMovement(float dt);
+	void updateInventory(float dt);
+
 public:
 
 	// Used when in FPS control to know how high are we looking

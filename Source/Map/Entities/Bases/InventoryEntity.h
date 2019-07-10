@@ -46,6 +46,10 @@ struct std::hash<sf::Vector2i>
 //		-> int x
 //		-> int y
 //		-> int slotType
+//	- removeItem (SERVER<->CLIENT)
+//		-> uint32_t uid
+//		-> float x
+//		-> float y
 //
 class InventoryEntity : public virtual Entity
 {
@@ -90,12 +94,19 @@ public:
 	void setTileEnabled(sf::Vector2i pos, bool val, bool sendNetwork = true, ENetPeer* excludedPeer = NULL);
 	bool isTileDisabled(sf::Vector2i pos);
 
+	// The coordinate you give is where the item will be dropped in the world
+	void removeItem(ItemEntity* item, sf::Vector2f worldPos, bool sendNetwork = true, ENetPeer* excludedPeer = NULL);
+
 	std::vector<ItemEntity*> getAllItems() { return items; }
 	std::vector<ItemEntity*>* getItemsPtr() { return &items; }
 
 	InventorySlot getSlotType(sf::Vector2i pos);
 
 	void setSlotType(sf::Vector2i pos, InventorySlot type, bool sendNetwork = true, ENetPeer* excludedPeer = NULL);
+
+	virtual void onInventoryItemRemoved() {}
+	virtual void onInventoryItemAdded() {}
+	virtual void onInventoryItemMoved() {}
 
 	InventoryEntity(ProgramType* prog, uint32_t uid, sf::Vector2i gridSize) : Entity(prog, uid)
 	{

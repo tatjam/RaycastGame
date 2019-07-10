@@ -43,6 +43,13 @@ void InventoryEntity::onGenericCall(std::string cmd, json args, ENetPeer* peer)
 
 		setSlotType(pos, val, sendNetwork, excludedPeer);
 	}
+	else if (cmd == "removeItem")
+	{
+		uint32_t uid = args["uid"];
+		sf::Vector2f pos = sf::Vector2f(args["x"], args["y"]);
+
+		removeItem(dynamic_cast<ItemEntity*>(getWorld()->findEntity(uid)), pos, sendNetwork, excludedPeer);
+	}
 }
 
 bool InventoryEntity::isTileFree(sf::Vector2i tile)
@@ -140,6 +147,8 @@ bool InventoryEntity::setItem(sf::Vector2i pos, ItemEntity* item, bool sendNetwo
 			}
 		}
 
+		onInventoryItemAdded();
+
 		return true;
 	}
 	else
@@ -155,17 +164,19 @@ void InventoryEntity::setTileEnabled(sf::Vector2i pos, bool val, bool sendNetwor
 
 	if (val)
 	{
-		DCHECK(isTileDisabled(pos)) << "Tried to enable an already enabled tile";
-
-		disabledTiles.erase(pos);
-		could = true;
+		if (isTileDisabled(pos))
+		{
+			disabledTiles.erase(pos);
+			could = true;
+		}
 	}
 	else
 	{
-		DCHECK(!isTileDisabled(pos)) << "Tried to disable an already disabled tile";
-
-		disabledTiles.insert(pos);
-		could = true;
+		if (!isTileDisabled(pos))
+		{
+			disabledTiles.insert(pos);
+			could = true;
+		}
 	}
 
 	if (could && sendNetwork)
@@ -191,6 +202,44 @@ bool InventoryEntity::isTileDisabled(sf::Vector2i pos)
 {
 	// We return true if found
 	return disabledTiles.find(pos) != disabledTiles.end();
+}
+
+void InventoryEntity::removeItem(ItemEntity* item, sf::Vector2f worldPos, bool sendNetwork, ENetPeer * excludedPeer)
+{
+	int index = -1;
+	for (int i = 0; i < items.size(); i++)
+	{
+		if (items[i] == item)
+		{
+			index = i;
+		}
+	}
+
+	if (index >= 0)
+	{
+		items.erase(items.begin() + index);
+		item->setInWorld(worldPos);
+
+		if (sendNetwork)
+		{
+			json args;
+			args["id"] = item->uid;
+			args["x"] = worldPos.x;
+			args["y"] = worldPos.y;
+
+			if (excludedPeer != NULL)
+			{
+				sendGenericCallToAllBut(excludedPeer, "removeItem", args);
+			}
+			else
+			{
+				// We are the client so send to server
+				sendGenericCall(getProg()->getServer(), "removeItem", args);
+			}
+		}
+
+		onInventoryItemRemoved();
+	}
 }
 
 InventorySlot InventoryEntity::getSlotType(sf::Vector2i pos)

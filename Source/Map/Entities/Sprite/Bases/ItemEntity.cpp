@@ -18,13 +18,22 @@ void ItemEntity::setInventory(InventoryEntity * inv)
 void ItemEntity::setInWorld(sf::Vector2f pos)
 {
 	inWorld = true;
+	inSpecial = false;
 	getSprite()->pos = pos;
 }
 
 void ItemEntity::setInInventory(sf::Vector2i pos)
 {
 	inWorld = false;
+	inSpecial = false;
 	inventoryPos = pos;
+}
+
+void ItemEntity::setInSpecialSlot(SpecialSlot special)
+{
+	inSpecial = true;
+	inWorld = false;
+	specialPos = special;
 }
 
 
