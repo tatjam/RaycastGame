@@ -153,6 +153,7 @@
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Map\World.cpp" />
     <ClCompile Include="Source\Packet.cpp" />
+    <ClCompile Include="Source\ProgramType.cpp" />
     <ClCompile Include="Source\Server\Server.cpp" />
     <ClCompile Include="Source\Utils.cpp" />
   </ItemGroup>

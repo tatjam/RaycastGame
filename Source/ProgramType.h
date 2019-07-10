@@ -1,6 +1,7 @@
 #pragma once
+#include <Thor/Resources.hpp>
 
-#include "../Map/World.h"
+#include "Map/World.h"
 
 // Arguments in PUSH order
 
@@ -40,6 +41,10 @@ struct ConnectedClient
 
 class ProgramType
 {
+private:
+
+	thor::ResourceHolder<sf::Image, std::string> images;
+
 public:
 
 	virtual World* getWorld() = 0;
@@ -64,5 +69,17 @@ public:
 	virtual void mainFunc(int argc, char** argv) = 0;
 
 	virtual sf::RenderWindow* getWindow() = 0;
+
+	thor::ResourceHolder<sf::Image, std::string>& getImages() { return images; }
+
+	// Loads resources from the Assets folder, giving ids by filesystem location relative
+	// to Assets
+	// Ex: ./Assets/items/flashlight/hand.png becomes items/flashlight/hand.png
+	void loadAllResources(const std::string& path = "./Assets/");
+
+	ProgramType()
+	{
+		loadAllResources();
+	}
 
 };

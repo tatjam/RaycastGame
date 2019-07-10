@@ -20,9 +20,9 @@ private:
 
 	SpecialSlot specialPos;
 
-	sf::Image* inWorld;
-	sf::Image* inInventory;
-	sf::Image* inHand;
+	sf::Image* imageInWorld;
+	sf::Image* imageInInventory;
+	sf::Image* imageInHand;
 
 public:
 

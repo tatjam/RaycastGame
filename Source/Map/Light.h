@@ -32,6 +32,9 @@ struct Light
 	// Only on SPOT
 	float direction;
 
+	// Only on SPOT, in degrees
+	float amplitude;
+
 	// For softer lights, set to a high value, for stronger, to a lower
 	float attenuation;
 

@@ -86,6 +86,9 @@
     <ClCompile Include="Source\Client\PlayerHUD.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ProgramType.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h">

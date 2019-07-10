@@ -175,7 +175,7 @@ void Client::play()
 	sf::Sprite targetSpr;
 
 	sf::Texture cursorTex;
-	cursorTex.loadFromFile("Assets/cursor.png");
+	cursorTex.loadFromImage(getImages()["cursor.png"]);
 
 	sf::Clock dtc;
 	sf::Time dtt;
@@ -200,6 +200,7 @@ void Client::play()
 	nLight->maxDist = 5.0f;
 	nLight->pos = sf::Vector2f(2.5f, 2.5f);
 	nLight->attenuation = 8.0f;
+	nLight->amplitude = 45.0f;
 	world.map->lights.push_back(nLight);
 
 	

@@ -131,7 +131,7 @@ void PlayerHUD::update(float dt)
 PlayerHUD::PlayerHUD(Client* cl)
 {
 	client = cl;
-	defaultHUDTex.loadFromFile("Assets/hud.png");
+	defaultHUDTex.loadFromImage(client->getImages()["hud.png"]);
 	defaultHUDSpr.setTexture(defaultHUDTex);
 
 }
