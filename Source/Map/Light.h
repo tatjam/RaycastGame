@@ -21,6 +21,8 @@ struct Light
 	};
 
 
+	bool enabled;
+
 	LightType type;
 
 	sf::Vector2f pos;
@@ -49,5 +51,6 @@ struct Light
 		amplitude = 3.1415f / 2.0f;
 		direction = 0.0f;
 		this->id = id;
+		enabled = true;
 	}
 };

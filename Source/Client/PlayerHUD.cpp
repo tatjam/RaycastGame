@@ -234,36 +234,13 @@ void PlayerHUD::draw(int screenScale, int uiScale, int gameHeight)
 			win->draw(itemDrawer);
 		}
 
-		// Handle item management, and indicate hovered slots
-		int hand = 0;
-
-		ItemEntity* over = NULL;
-
-		colorer.setFillColor(sf::Color(255, 255, 255, 50));
-
-
-		if (hoveredSlot == NONE)
-		{
-			over = player->getItem(rCoord);
-		}
-		else if (hoveredSlot == L_HAND)
-		{
-			over = leftHand;
-			colorer.setPosition(HAND_POS.x, HAND_POS.y + uiPos);
-			win->draw(colorer);
-		}
-		else if (hoveredSlot == R_HAND)
-		{
-			over = rightHand;
-			colorer.setPosition(HAND_POS.x + HAND_OFFSET.x, HAND_POS.y + uiPos);
-			win->draw(colorer);
-		}
+		bool leftDown = false, rightDown = false;
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 		{
 			if (!wasLeftDown)
 			{
-				hand = 1;
+				leftDown = true;
 			}
 
 			wasLeftDown = true;
@@ -277,7 +254,7 @@ void PlayerHUD::draw(int screenScale, int uiScale, int gameHeight)
 		{
 			if (!wasRightDown)
 			{
-				hand = 2;
+				rightDown = true;
 			}
 
 			wasRightDown = true;
@@ -287,48 +264,182 @@ void PlayerHUD::draw(int screenScale, int uiScale, int gameHeight)
 			wasRightDown = false;
 		}
 
-	
-		if (hand == 1)
+
+		// Handle item management, and indicate hovered slots
+		if (inContextualMenu)
 		{
+			drawContextualMenu(leftDown, rightDown, player);
+		}
+		else
+		{
+			ItemEntity* over = NULL;
+
+			colorer.setFillColor(sf::Color(255, 255, 255, 50));
+
+
+			if (hoveredSlot == NONE)
+			{
+				over = player->getItem(rCoord);
+			}
+			else if (hoveredSlot == L_HAND)
+			{
+				over = leftHand;
+				colorer.setPosition(HAND_POS.x, HAND_POS.y + uiPos);
+				win->draw(colorer);
+			}
+			else if (hoveredSlot == R_HAND)
+			{
+				over = rightHand;
+				colorer.setPosition(HAND_POS.x + HAND_OFFSET.x, HAND_POS.y + uiPos);
+				win->draw(colorer);
+			}
+
+
+
 			
+			handleHand(leftDown, rightDown, rCoord, hoveredSlot, player, leftHand, rightHand, over);
 		}
-		else if (hand == 2)
+	}
+}
+
+void PlayerHUD::drawContextualMenu(bool leftDown, bool rightDown, InventoryEntity* inv)
+{
+	sf::RenderWindow* win = client->getWindow();
+
+	std::vector<std::string> options;
+	options.push_back("Swap");
+	
+	if (contextualItem != NULL)
+	{
+		options.push_back("Drop");
+		std::string oppositeHand;
+		if (contextualItem->getSpecialSlot() == L_HAND)
 		{
-			if (rightHand != NULL && over == NULL)
-			{
-				if (hoveredSlot == L_HAND && rightHand->isOneHanded())
-				{
-					player->moveItemToSpecialSlot(rightHand, SpecialSlot::L_HAND);
-				}
-				else
-				{
-					if (player->isTileUsable(rCoord) && rightHand->canGoInSlot(player->getSlotType(rCoord)))
-					{
-						player->moveItem(rightHand, rCoord);
-					}
-				}
-			}
-
-			if (over != NULL && rightHand != NULL)
-			{
-				// Try to use item on the other item (TODO)
-			}
-
-			if (over != NULL && rightHand == NULL)
-			{
-				if (over->isOneHanded())
-				{
-					player->moveItemToSpecialSlot(over, SpecialSlot::R_HAND);
-				}
-				else
-				{
-					if (leftHand == NULL)
-					{
-						player->moveItemToSpecialSlot(over, SpecialSlot::B_HAND);
-					}
-				}
-			}
+			oppositeHand = "right hand";
 		}
+		else
+		{
+			oppositeHand = "left hand";
+		}
+
+		options.push_back("Use on " + oppositeHand);
+
+		std::vector<std::string> fromItem = contextualItem->getContextualMenuEntries();
+		options.insert(options.end(), fromItem.begin(), fromItem.end());
+	}
+
+	sf::RectangleShape overlay;
+	overlay.setFillColor(CONTEXTUAL_OVERLAY_COLOR);
+	overlay.setOutlineColor(CONTEXTUAL_STROKE_COLOR);
+	overlay.setOutlineThickness(CONTEXTUAL_STROKE_WIDTH);
+
+	float requiredHeight = CONTEXTUAL_HEIGHT_PER_ITEM * options.size();
+	overlay.setSize(sf::Vector2f(CONTEXTUAL_WIDTH, requiredHeight));
+
+	overlay.setPosition(sf::Vector2f(CONTEXTUAL_POS) - sf::Vector2f(0, requiredHeight) + sf::Vector2f(0, client->getUIStart()));
+
+	win->draw(overlay);
+
+	thor::Arrow separator;
+	separator.setStyle(thor::Arrow::Style::Line);
+	separator.setColor(CONTEXTUAL_SEPARATOR_COLOR);
+	separator.setThickness(1.0f);
+
+	sf::Vector2i mouse = sf::Mouse::getPosition(*win);
+
+
+	sf::RectangleShape chosenOverlay;
+	chosenOverlay.setFillColor(CONTEXTUAL_HOVER_COLOR);
+	chosenOverlay.setSize(sf::Vector2f(overlay.getSize().x, CONTEXTUAL_HEIGHT_PER_ITEM));
+	chosenOverlay.setOutlineThickness(0.0f);
+
+	int chosen = -1;
+
+	sf::Text text;
+	text.setFont(client->getFonts()["consola.ttf"]);
+	text.setCharacterSize(16);
+
+	for (size_t i = 0; i < options.size(); i++)
+	{
+		sf::Vector2i min;
+		min.x = overlay.getPosition().x;
+		min.y = overlay.getPosition().y + CONTEXTUAL_HEIGHT_PER_ITEM * i;
+		sf::Vector2i max;
+		max.x = min.x + overlay.getSize().x;
+		max.y = min.y + CONTEXTUAL_HEIGHT_PER_ITEM;
+
+		// TODO: Center text?
+		text.setString(options[i]);
+		text.setPosition(min.x + 2, min.y);
+		win->draw(text);
+
+		if (i != options.size() - 1)
+		{
+			separator.setPosition(min.x, max.y);
+			separator.setDirection(max.x - min.x, 0.0f);
+			win->draw(separator);
+		}
+
+		if (mouse.x >= min.x && mouse.y >= min.y && mouse.x < max.x && mouse.y < max.y)
+		{
+			chosenOverlay.setPosition(min.x, min.y);
+			win->draw(chosenOverlay);
+			chosen = i;
+		}
+	}
+
+	if (rightDown)
+	{
+		inContextualMenu = false;
+	}
+
+	if (leftDown)
+	{
+		if (chosen >= 0)
+		{
+			std::string str = options[chosen];
+
+			if (str == "Swap")
+			{
+				ItemEntity* leftHand = inv->getItem(SpecialSlot::L_HAND);
+				ItemEntity* rightHand = inv->getItem(SpecialSlot::R_HAND);
+
+				if (leftHand != NULL)
+				{
+					leftHand->setInSpecialSlot(SpecialSlot::R_HAND);
+				}
+
+				if (rightHand != NULL)
+				{
+					rightHand->setInSpecialSlot(SpecialSlot::L_HAND);
+				}
+
+			}
+			else if (str == "Drop")
+			{
+
+			}
+			else if (str == "Use on right hand")
+			{
+
+			}
+			else if (str == "Use on left hand")
+			{
+
+			}
+			else
+			{
+				// Send to item
+				if (contextualItem != NULL)
+				{
+					contextualItem->sendContextualMenuAction(str);
+				}
+			}
+		
+
+		}
+
+		inContextualMenu = false;
 
 	}
 }
@@ -368,59 +479,87 @@ void PlayerHUD::handleHand(bool leftClick, bool rightClick, sf::Vector2i hovered
 			source = leftHand;
 			opposite = rightHand;
 		}
-		
+
 		if (rightClick)
 		{
 			source = rightHand;
 			opposite = leftHand;
 		}
 
-
-		if (over == NULL && source != NULL)
+		if (hovered == L_HAND || hovered == R_HAND)
 		{
-			if (hovered == NORMAL)
+			// Special behaviour for these, left click
+			// uses hovered on self, right-click
+			// shows contextual menu
+
+			if (leftClick && over != NULL)
 			{
-				// Try to set the hand item there
-				if (player->isTileUsable(hoveredCoords) && source->canGoInSlot(player->getSlotType(hoveredCoords)))
-				{
-					player->moveItem(source, hoveredCoords);
-				}
+				over->useOnItem(over);
 			}
-			else
+
+			if (rightClick)
 			{
-				if (hovered == R_HAND)
-				{
-					// Move to right hand
-					player->moveItemToSpecialSlot(source, R_HAND);
-				}
+				contextualItem = over;
+				inContextualMenu = true;
 			}
 		}
-
-		if (over != NULL && source != NULL)
+		else
 		{
-			if (hovered == NORMAL)
-			{
 
-			}
-			else
+			if (over == NULL && source != NULL)
 			{
-				if (hovered == L_HAND || hovered == R_HAND)
+				if (hovered == NORMAL)
 				{
-					source->useOnItem(over);
+					// Try to set the hand item there
+					if (player->isTileUsable(hoveredCoords) && source->canGoInSlot(player->getSlotType(hoveredCoords)))
+					{
+						player->moveItem(source, hoveredCoords);
+					}
+				}
+				else
+				{
+					if (hovered == R_HAND)
+					{
+						// Move to right hand
+						player->moveItemToSpecialSlot(source, R_HAND);
+					}
 				}
 			}
-		}
 
-		if (over != NULL && source == NULL)
-		{
-			// Move item to hand
-			player->moveItemToSpecialSlot(over, hovered);
+			if (over != NULL && source != NULL)
+			{
+				if (hovered == NORMAL)
+				{
+					// Swap items maybe? TODO
+				}
+				else
+				{
+					if (hovered == L_HAND || hovered == R_HAND)
+					{
+						source->useOnItem(over);
+					}
+				}
+			}
+
+			if (over != NULL && source == NULL)
+			{
+				// Move item to hand
+				if (leftClick)
+				{
+					player->moveItemToSpecialSlot(over, L_HAND);
+				}
+				else if (rightClick)
+				{
+					player->moveItemToSpecialSlot(over, R_HAND);
+				}
+
+			}
 		}
 	}
 
 }
 
-void PlayerHUD::useItem(ItemEntity * item, EPlayer * player)
+void PlayerHUD::useItem(ItemEntity* item, EPlayer* player)
 {
 }
 

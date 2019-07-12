@@ -1606,6 +1606,11 @@ void Map::updateLighting()
 			continue;
 		}
 
+		if (lights[i]->enabled == false)
+		{
+			continue;
+		}
+
 		if (lights[i]->type == Light::POINT)
 		{
 			// We interpolate in all directions
@@ -1626,15 +1631,15 @@ void Map::updateLighting()
 			float drDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(1.5f, 1.5f)) * att), 1.0f);
 			float dlDistInv = std::min(1.0f / (thor::squaredLength(subPos - sf::Vector2f(-0.5f, 1.5f)) * att), 1.0f);
 
-			tiles[(pY + 0) * map_width + (pX + 0)].setAllLights(lights[i]->light * cDistInv);
-			tiles[(pY - 1) * map_width + (pX + 0)].setAllLights(lights[i]->light * uDistInv);
-			tiles[(pY + 0) * map_width + (pX + 1)].setAllLights(lights[i]->light * rDistInv);
-			tiles[(pY + 1) * map_width + (pX + 0)].setAllLights(lights[i]->light * dDistInv);
-			tiles[(pY + 0) * map_width + (pX - 1)].setAllLights(lights[i]->light * lDistInv);
-			tiles[(pY - 1) * map_width + (pX + 1)].setAllLights(lights[i]->light * urDistInv);
-			tiles[(pY - 1) * map_width + (pX - 1)].setAllLights(lights[i]->light * ulDistInv);
-			tiles[(pY + 1) * map_width + (pX + 1)].setAllLights(lights[i]->light * drDistInv);
-			tiles[(pY + 1) * map_width + (pX - 1)].setAllLights(lights[i]->light * dlDistInv);
+			tiles[(pY + 0) * map_width + (pX + 0)].addToAllLight(lights[i]->light * cDistInv);
+			tiles[(pY - 1) * map_width + (pX + 0)].addToAllLight(lights[i]->light * uDistInv);
+			tiles[(pY + 0) * map_width + (pX + 1)].addToAllLight(lights[i]->light * rDistInv);
+			tiles[(pY + 1) * map_width + (pX + 0)].addToAllLight(lights[i]->light * dDistInv);
+			tiles[(pY + 0) * map_width + (pX - 1)].addToAllLight(lights[i]->light * lDistInv);
+			tiles[(pY - 1) * map_width + (pX + 1)].addToAllLight(lights[i]->light * urDistInv);
+			tiles[(pY - 1) * map_width + (pX - 1)].addToAllLight(lights[i]->light * ulDistInv);
+			tiles[(pY + 1) * map_width + (pX + 1)].addToAllLight(lights[i]->light * drDistInv);
+			tiles[(pY + 1) * map_width + (pX - 1)].addToAllLight(lights[i]->light * dlDistInv);
 		}
 		else if (lights[i]->type == Light::AREA || lights[i]->type == Light::SPOT)
 		{
@@ -1660,6 +1665,8 @@ void Map::updateLighting()
 			{
 				step = 0.05f;
 			}
+
+			std::unordered_set<sf::Vector2i> hitTiles;
 
 			for (float theta = start; theta < end; theta += step)
 			{
@@ -1741,7 +1748,11 @@ void Map::updateLighting()
 
 					if (hit->transparent)
 					{
-						hit->setAllLights(lights[i]->light * power);
+						if (hitTiles.find(sf::Vector2i(map.x, map.y)) == hitTiles.end())
+						{
+							hit->addToAllLight(lights[i]->light * power);
+							hitTiles.insert(sf::Vector2i(map.x, map.y));
+						}
 					}
 					else
 					{

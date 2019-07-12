@@ -55,6 +55,7 @@ class ProgramType
 private:
 
 	thor::ResourceHolder<sf::Image, std::string> images;
+	thor::ResourceHolder<sf::Font, std::string> fonts;
 
 public:
 
@@ -86,6 +87,8 @@ public:
 	virtual sf::RenderWindow* getWindow() = 0;
 
 	thor::ResourceHolder<sf::Image, std::string>& getImages() { return images; }
+
+	thor::ResourceHolder<sf::Font, std::string>& getFonts() { return fonts; }
 
 	// Loads resources from the Assets folder, giving ids by filesystem location relative
 	// to Assets

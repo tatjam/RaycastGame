@@ -134,6 +134,37 @@ struct Tile
 		startLight = val;
 	}
 
+	sf::Vector3f limitVector(sf::Vector3f v)
+	{
+		if (v.x > 1.0f)
+		{
+			v.x = 1.0f;
+		}
+
+		if (v.y > 1.0f)
+		{
+			v.y = 1.0f;
+		}
+
+		if (v.z > 1.0f)
+		{
+			v.z = 1.0f;
+		}
+
+		return v;
+	}
+
+	void addToAllLight(sf::Vector3f val)
+	{
+		light += val;
+		prevLight += val;
+		startLight += val;
+
+		light = limitVector(light);
+		prevLight = limitVector(prevLight);
+		startLight = limitVector(startLight);
+	}
+
 	json serialize();
 	void deserialize(json data);
 };

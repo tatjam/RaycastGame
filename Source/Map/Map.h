@@ -9,6 +9,7 @@
 #include "../Utils.h"
 #include <thread>
 #include <condition_variable>
+#include <unordered_set>
 
 #ifndef PI
 #define PI 3.14159265358979323f

@@ -10,17 +10,7 @@
 
 class ItemEntity;
 
-// We do this to allow using Vector2i as keys
-template <>
-struct std::hash<sf::Vector2i>
-{
-	std::size_t operator()(const sf::Vector2i& k) const
-	{
-		size_t seed = 0;
-		hash_combine(seed, k.x, k.y);
-		return seed;
-	}
-};
+
 
 // An InventoryEntity can hold items in particular
 // arrangements in a grid. The drawing of the grid

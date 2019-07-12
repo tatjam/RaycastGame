@@ -7,7 +7,7 @@
 #define EPLAYER_NETUPDATE (1.0f / EPLAYER_NETFRAMERATE)
 
 #define EPLAYER_MAX_DELTA_POS 0.05f
-#define EPLAYER_MAX_DELTA_ANGLE (PI / 10.0f)  //< 18º
+#define EPLAYER_MAX_DELTA_ANGLE (PI / 20.0f)  //< 9º
 
 // TODO: Control methods
 class EPlayer : public SpriteEntity, public InventoryEntity

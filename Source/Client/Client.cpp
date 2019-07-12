@@ -203,8 +203,8 @@ void Client::play()
 	// TODO: Remove this
 	Light* nLight = new Light(world.map->getLightUID());
 	nLight->light = sf::Vector3f(0.5f, 0.5f, 0.5f);
-	nLight->type = Light::SPOT;
-	nLight->maxDist = 10.0f;
+	nLight->type = Light::AREA;
+	nLight->maxDist = 4.0f;
 	nLight->pos = sf::Vector2f(2.5f, 2.5f);
 	nLight->attenuation = 8.0f;
 	nLight->amplitude = PI / 8.0f;
@@ -303,13 +303,6 @@ void Client::play()
 
 		world.update(dt);
 		playerHUD.update(dt);
-
-		SpriteEntity* other = dynamic_cast<SpriteEntity*>(world.findEntity(3));
-		if (other)
-		{
-			nLight->pos = other->getSprite()->pos;
-			nLight->direction = other->getSprite()->angle;
-		}
 
 		if (controlledEntityPtr != NULL)
 		{

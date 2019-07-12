@@ -351,7 +351,7 @@ EPlayer::EPlayer(ProgramType* prog, uint32_t uid) : SpriteEntity(prog, uid), Inv
 	setSlotType({ 1, 1 }, InventorySlot::BACKPACK, false);
 	setSlotType({ 1, 2 }, InventorySlot::BELT, false);
 
-
+	deltaPos = sf::Vector2f(1000.0f, 1000.0f);
 }
 
 EPlayer::~EPlayer()

@@ -43,6 +43,10 @@ void ItemEntity::onGenericCall(std::string cmd, json args, ENetPeer* peer)
 	{
 		itemFrame = args["frame"];
 	}
+	else if(cmd == "contextualMenuAction")
+	{
+		receiveContextualMenuAction(args["action"], peer);
+	}
 }
 
 void ItemEntity::setItemFrame(size_t frame, bool sendNetwork)
@@ -201,6 +205,27 @@ void ItemEntity::update(float dt)
 			handTimer = 0.0f;
 		}
 	}
+}
+
+void ItemEntity::sendContextualMenuAction(std::string action)
+{
+	json args;
+	args["action"] = action;
+	sendGenericCall(getProg()->getServer(), "contextualMenuAction", args);
+
+	doContextualMenuAction(action);
+}
+
+void ItemEntity::receiveContextualMenuAction(std::string action, ENetPeer* from)
+{
+	if (getProg()->isServer())
+	{
+		json args;
+		args["action"] = action;
+		sendGenericCallToAllBut(from, "contextualMenuAction", args);
+	}
+
+	doContextualMenuAction(action);
 }
 
 ItemEntity::~ItemEntity()

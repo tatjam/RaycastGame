@@ -80,7 +80,7 @@ bool InventoryEntity::isTileFree(sf::Vector2i tile)
 
 	for (size_t i = 0; i < items.size(); i++)
 	{
-		if (items[i]->isInInventory())
+		if (items[i]->isInInventorySlot())
 		{
 			sf::Vector2i size = items[i]->getInventorySize();
 			sf::Vector2i pos = items[i]->getInventoryPos();
@@ -420,7 +420,7 @@ void InventoryEntity::update(float dt)
 {
 	Entity::update(dt);
 
-	std::string server;
+	/*std::string server;
 	if (getProg()->isClient())
 	{
 		server = "client";
@@ -462,7 +462,7 @@ void InventoryEntity::update(float dt)
 		LOG(INFO) << "Item: " << items[i]->uid << " in (" << slot << ")";
 	}
 
-	LOG(INFO) << "---------------------------------";
+	LOG(INFO) << "---------------------------------";*/
 
 }
 

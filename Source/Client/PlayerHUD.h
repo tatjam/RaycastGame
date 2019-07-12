@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <Thor/Input.hpp>
+#include <Thor/Shapes.hpp>
 #include "../Map/Entities/Bases/InventoryEntity.h"
 #include "../Map/Entities/Bases/ItemEntity.h"
 #include "../Map/Entities/Sprite/EPlayer.h"
@@ -18,6 +19,9 @@ class PlayerHUD
 {
 private:
 
+	bool inContextualMenu;
+	ItemEntity* contextualItem;
+
 	bool wasLeftDown;
 	bool wasRightDown;
 
@@ -28,6 +32,19 @@ private:
 
 	sf::RectangleShape colorer;
 	
+	const sf::Color CONTEXTUAL_OVERLAY_COLOR = sf::Color(70, 70, 70);
+	const sf::Color CONTEXTUAL_STROKE_COLOR = sf::Color(27, 27, 27);
+	const sf::Color CONTEXTUAL_SEPARATOR_COLOR = sf::Color(111, 111, 111);
+	const sf::Color CONTEXTUAL_HOVER_COLOR = sf::Color(255, 255, 255, 128);
+
+	const float CONTEXTUAL_STROKE_WIDTH = 4.0f;
+
+	const int CONTEXTUAL_WIDTH = 65 * 3;
+	
+	const int CONTEXTUAL_HEIGHT_PER_ITEM = 24;
+
+	const sf::Vector2i CONTEXTUAL_POS = sf::Vector2i(819 - 65, 26);
+
 	const sf::Color DISABLED_COLOR = sf::Color(20, 20, 20);
 	const sf::Color FULL_COLOR = sf::Color(44, 44, 44);
 
@@ -54,6 +71,8 @@ public:
 	// You are given the different scalars
 	// gameHeight is NOT scaled
 	void draw(int screenScale, int uiScale, int gameHeight);
+
+	void drawContextualMenu(bool leftDown, bool rightDown, InventoryEntity* inv);
 
 	void handleHand(bool leftClick, bool rightClick, sf::Vector2i hoveredCoord, SpecialSlot hovered, InventoryEntity* player, ItemEntity* leftHand, ItemEntity* rightHand, ItemEntity* over);
 
