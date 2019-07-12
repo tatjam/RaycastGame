@@ -1,6 +1,6 @@
 #include "Server.h"
 #include "../Map/Entity.h"
-#include "../Map/Entities/Tile/ESimpleDoor.h"
+#include "../Map/Entities/AllEntities.h"
 
 void Server::mainFunc(int argc, char** argv)
 {
@@ -55,8 +55,12 @@ void Server::mainFunc(int argc, char** argv)
 				// Give him an entity
 				// We do this here to prevent the client from
 				// getting an entity which will be overwritten by the download
-				Entity* playerEnt = world.createGlobalEntity(Entity::PLAYER, this);
+				EPlayer* playerEnt = dynamic_cast<EPlayer*>(world.createGlobalEntity(Entity::PLAYER, this));
 				newClient.entityControlled = playerEnt->uid;
+
+				ItemEntity* flashlightEnt = dynamic_cast<ItemEntity*>(world.createGlobalEntity(Entity::ITEM_FLASHLIGHT, this));
+				
+				playerEnt->setItem({ 3, 0 }, flashlightEnt, true, newClient.peer);
 
 				clients.push_back(newClient);
 
@@ -294,7 +298,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 1;
+	targetPlayers = 2;
 }
 
 

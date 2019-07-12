@@ -267,7 +267,7 @@ void EPlayer::updateMovement(float dt)
 		}
 	}
 
-	if (sendTimer <= 0.0f && (deltaAngle >= EPLAYER_MAX_DELTA_ANGLE || thor::length(deltaPos) >= EPLAYER_MAX_DELTA_POS))
+	if (sendTimer <= 0.0f && (std::abs(deltaAngle) >= EPLAYER_MAX_DELTA_ANGLE || thor::length(deltaPos) >= EPLAYER_MAX_DELTA_POS))
 	{
 		emitCommandToServer(SET_SPRITE_POSROT, makeSetSpritePosRot(getSprite()->pos, getSprite()->angle));
 		sendTimer = EPLAYER_NETUPDATE;
@@ -281,11 +281,15 @@ void EPlayer::updateMovement(float dt)
 
 void EPlayer::updateInventory(float dt)
 {
-	bool hasShirt = !isTileFree({ 0, 1 });
-	bool hasBackpack = !isTileFree({ 1, 1 });;
-	bool hasPants = !isTileFree({ 0, 2 });;
-	bool hasBelt = !isTileFree({ 1, 2 });
-
+	// TODO: Change this again :)
+	/*bool hasShirt = !isTileFree({ 0, 1 });
+	bool hasBackpack = !isTileFree({ 1, 1 });
+	bool hasPants = !isTileFree({ 0, 2 });
+	bool hasBelt = !isTileFree({ 1, 2 });*/
+	bool hasShirt = isTileFree({ 0, 1 });
+	bool hasBackpack = isTileFree({ 1, 1 });
+	bool hasPants = isTileFree({ 0, 2 });
+	bool hasBelt = isTileFree({ 1, 2 }); 
 
 	setTileEnabled({ 2, 0 }, hasShirt, false);
 	setTileEnabled({ 3, 0 }, hasShirt, false);

@@ -18,10 +18,14 @@ class Client : public ProgramType
 {
 public:
 
+	int uiStart;
+
 	PlayerHUD playerHUD;
 
 	ENetPeer* server;
 	ENetHost* client;
+
+	thor::ActionMap<ActionType> actionMap;
 
 	sf::RenderWindow* win;
 
@@ -41,6 +45,12 @@ public:
 
 	Client();
 	~Client();
+
+	virtual int getUIStart()
+	{
+		return uiStart;
+	}
+
 
 	// Inherited via ProgramType
 	virtual World* getWorld() override
@@ -83,6 +93,11 @@ public:
 	virtual sf::RenderWindow* getWindow() override
 	{
 		return win;
+	}
+
+	virtual thor::ActionMap<ActionType>* getActionMap()
+	{
+		return &actionMap;
 	}
 };
 

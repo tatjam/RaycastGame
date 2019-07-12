@@ -1,6 +1,6 @@
 #include "Client.h"
 #include "../Map/Entities/Bases/TileEntity.h"
-#include "../Map/Entities/EPlayer.h"
+#include "../Map/Entities/Sprite/EPlayer.h"
 
 void Client::mainFunc(int argc, char** argv)
 {
@@ -131,7 +131,12 @@ bool Client::download()
 					packet.popByte();
 					world.receiveNewEntity(packet, this);
 				}
-
+				else if (packet.getType() == MSG_COMMAND)
+				{
+					// Commands can also be received in some special cases, just handle them
+					packet.popByte();
+					world.handleCommand(packet, event.peer);
+				}
 			}
 
 			enet_packet_destroy(event.packet);
@@ -162,6 +167,8 @@ void Client::play()
 	int uiScale = 1;
 	int uiHeight = 286 * uiScale;
 	int topUiHeight = 0 * uiScale;
+
+	uiStart = renderHeight * screenScale;
 
 
 	win = new sf::RenderWindow(sf::VideoMode(renderWidth * screenScale, renderHeight * screenScale + uiHeight + topUiHeight), "Raycasting game");
@@ -196,11 +203,11 @@ void Client::play()
 	// TODO: Remove this
 	Light* nLight = new Light(world.map->getLightUID());
 	nLight->light = sf::Vector3f(0.5f, 0.5f, 0.5f);
-	nLight->type = Light::AREA;
-	nLight->maxDist = 5.0f;
+	nLight->type = Light::SPOT;
+	nLight->maxDist = 10.0f;
 	nLight->pos = sf::Vector2f(2.5f, 2.5f);
 	nLight->attenuation = 8.0f;
-	nLight->amplitude = 45.0f;
+	nLight->amplitude = PI / 8.0f;
 	world.map->lights.push_back(nLight);
 
 	
@@ -211,7 +218,11 @@ void Client::play()
 		while (win->pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
+			{
 				win->close();
+			}
+
+			actionMap.pushEvent(event);
 		}
 
 
@@ -297,6 +308,7 @@ void Client::play()
 		if (other)
 		{
 			nLight->pos = other->getSprite()->pos;
+			nLight->direction = other->getSprite()->angle;
 		}
 
 		if (controlledEntityPtr != NULL)
@@ -462,7 +474,7 @@ void Client::play()
 		dt = dtt.asSeconds();
 		t += dt;
 
-		win->setTitle("Raycaster | FPS: " + std::to_string(1.0f / dt));
+		win->setTitle("Raycaster | FPS: " + std::to_string(1.0f / dt) + " Playing as: " + std::to_string(controlledEntity));
 	}
 }
 

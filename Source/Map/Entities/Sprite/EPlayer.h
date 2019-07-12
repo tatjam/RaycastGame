@@ -1,13 +1,13 @@
 #pragma once
-#include "Bases/SpriteEntity.h"
-#include "Bases/InventoryEntity.h"
+#include "../Bases/SpriteEntity.h"
+#include "../Bases/InventoryEntity.h"
 
 // 20 packets per second
 #define EPLAYER_NETFRAMERATE 8
 #define EPLAYER_NETUPDATE (1.0f / EPLAYER_NETFRAMERATE)
 
 #define EPLAYER_MAX_DELTA_POS 0.05f
-#define EPLAYER_MAX_DELTA_ANGLE (PI / 4.5f)
+#define EPLAYER_MAX_DELTA_ANGLE (PI / 10.0f)  //< 18º
 
 // TODO: Control methods
 class EPlayer : public SpriteEntity, public InventoryEntity

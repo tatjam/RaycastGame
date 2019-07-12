@@ -50,7 +50,13 @@ struct std::hash<sf::Vector2i>
 //		-> uint32_t uid
 //		-> float x
 //		-> float y
+//	- moveItem
+//		-> int x
+//		-> int y
+//		-> uint32_t uid
+//		-> int slot		// If not 0, coordinates will be negative
 //
+
 class InventoryEntity : public virtual Entity
 {
 private:
@@ -87,6 +93,7 @@ public:
 
 	// Returns NULL if there is no item there
 	ItemEntity* getItem(sf::Vector2i pos);
+	ItemEntity* getItem(SpecialSlot slot);
 
 	// Returns true if it could be placed, otherwise false
 	// Automatically synchronized IF THE ITEM COULD BE PLACED and sendNetwork is true
@@ -97,8 +104,15 @@ public:
 	// The coordinate you give is where the item will be dropped in the world
 	void removeItem(ItemEntity* item, sf::Vector2f worldPos, bool sendNetwork = true, ENetPeer* excludedPeer = NULL);
 
+	// Move into a negative coordinate if you are going to set the item in a special slot
+	void moveItem(ItemEntity* item, sf::Vector2i pos, bool sendNetwork = true, ENetPeer* excludedPeer = NULL);
+
+	void moveItemToSpecialSlot(ItemEntity* item, SpecialSlot slot, bool sendNetwork = true, ENetPeer* excludedPeer = NULL);
+
 	std::vector<ItemEntity*> getAllItems() { return items; }
 	std::vector<ItemEntity*>* getItemsPtr() { return &items; }
+
+
 
 	InventorySlot getSlotType(sf::Vector2i pos);
 
@@ -106,7 +120,13 @@ public:
 
 	virtual void onInventoryItemRemoved() {}
 	virtual void onInventoryItemAdded() {}
-	virtual void onInventoryItemMoved() {}
+	virtual void onInventoryItemMoved(ItemEntity* item, sf::Vector2i oldPos, SpecialSlot oldSlot) {}
+
+	// TODO: Remove 
+	virtual void update(float dt) override;
+
+	virtual json serialize() override;
+	virtual void deserialize(json j);
 
 	InventoryEntity(ProgramType* prog, uint32_t uid, sf::Vector2i gridSize) : Entity(prog, uid)
 	{

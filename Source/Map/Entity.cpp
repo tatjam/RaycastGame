@@ -2,8 +2,8 @@
 
 #include "../Client/Client.h"
 #include "../Server/Server.h"
-#include "Entities/EPlayer.h"
-#include "Entities/Tile/ESimpleDoor.h"
+#include "Entities/AllEntities.h"
+
 
 void Entity::emitCommand(uint8_t command_id, Packet packet, ENetPeer * peer, bool reliable)
 {
@@ -165,6 +165,10 @@ Entity* Entity::createFromType(EntityType type, ProgramType* prog, uint32_t uid)
 	else if (type == DOOR_SIMPLE)
 	{
 		return new ESimpleDoor(prog, uid);
+	}
+	else if (type == ITEM_FLASHLIGHT)
+	{
+		return new EFlashlight(prog, uid);
 	}
 	else
 	{

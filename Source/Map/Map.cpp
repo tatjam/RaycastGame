@@ -1636,9 +1636,32 @@ void Map::updateLighting()
 			tiles[(pY + 1) * map_width + (pX + 1)].setAllLights(lights[i]->light * drDistInv);
 			tiles[(pY + 1) * map_width + (pX - 1)].setAllLights(lights[i]->light * dlDistInv);
 		}
-		else if (lights[i]->type == Light::AREA)
+		else if (lights[i]->type == Light::AREA || lights[i]->type == Light::SPOT)
 		{
-			for (float theta = 0; theta < 2.0f * PI; theta += 0.25f)
+			float start = 0.0f;
+			float end = 2.0f * PI;
+
+			if (lights[i]->type == Light::SPOT)
+			{
+				start = lights[i]->direction - lights[i]->amplitude / 2.0f;
+				end = lights[i]->direction + lights[i]->amplitude / 2.0f;
+			}
+
+			float step = 0.4f;
+			if (lights[i]->maxDist >= 2.0f && lights[i]->maxDist < 5.0f)
+			{
+				step = 0.25f;
+			}
+			else if (lights[i]->maxDist >= 5.0f && lights[i]->maxDist < 10.0f)
+			{
+				step = 0.10f;
+			}
+			else
+			{
+				step = 0.05f;
+			}
+
+			for (float theta = start; theta < end; theta += step)
 			{
 				// Direction vector
 				sf::Vector2f direction;

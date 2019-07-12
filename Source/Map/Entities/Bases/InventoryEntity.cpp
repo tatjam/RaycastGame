@@ -1,5 +1,5 @@
 #include "InventoryEntity.h"
-#include "../Sprite/Bases/ItemEntity.h"
+#include "../Bases/ItemEntity.h"
 
 
 
@@ -10,6 +10,8 @@ InventoryEntity::~InventoryEntity()
 void InventoryEntity::onGenericCall(std::string cmd, json args, ENetPeer* peer)
 {
 	Entity::onGenericCall(cmd, args, peer);
+
+	//LOG(INFO) << args.dump();
 
 	bool sendNetwork = false;
 	ENetPeer* excludedPeer = NULL;
@@ -26,6 +28,8 @@ void InventoryEntity::onGenericCall(std::string cmd, json args, ENetPeer* peer)
 	{
 		sf::Vector2i pos = sf::Vector2i(args["x"], args["y"]);
 		uint32_t uid = args["uid"];
+
+		LOG(INFO) << "SET ITEM "; 
 
 		setItem(pos, dynamic_cast<ItemEntity*>(getWorld()->findEntity(uid)), sendNetwork, excludedPeer);
 	}
@@ -50,6 +54,21 @@ void InventoryEntity::onGenericCall(std::string cmd, json args, ENetPeer* peer)
 
 		removeItem(dynamic_cast<ItemEntity*>(getWorld()->findEntity(uid)), pos, sendNetwork, excludedPeer);
 	}
+	else if (cmd == "moveItem")
+	{
+		uint32_t uid = args["uid"];
+		sf::Vector2i pos = sf::Vector2i(args["x"], args["y"]);
+		SpecialSlot slot = (SpecialSlot)(args["slot"].get<int>());
+
+		if (slot == NORMAL)
+		{
+			moveItem(dynamic_cast<ItemEntity*>(getWorld()->findEntity(uid)), pos, sendNetwork, excludedPeer);
+		}
+		else
+		{
+			moveItemToSpecialSlot(dynamic_cast<ItemEntity*>(getWorld()->findEntity(uid)), slot, sendNetwork, excludedPeer);
+		}
+	}
 }
 
 bool InventoryEntity::isTileFree(sf::Vector2i tile)
@@ -61,13 +80,16 @@ bool InventoryEntity::isTileFree(sf::Vector2i tile)
 
 	for (size_t i = 0; i < items.size(); i++)
 	{
-		sf::Vector2i size = items[i]->getInventorySize();
-		sf::Vector2i pos = items[i]->getInventoryPos();
-
-		// AABB check to see if any item intercepts
-		if (tile.x >= pos.x && tile.x <= pos.x + size.x && tile.y >= pos.y && tile.y <= pos.y + size.y)
+		if (items[i]->isInInventory())
 		{
-			return false;
+			sf::Vector2i size = items[i]->getInventorySize();
+			sf::Vector2i pos = items[i]->getInventoryPos();
+
+			// AABB check to see if any item intercepts
+			if (tile.x >= pos.x && tile.x <= pos.x + size.x && tile.y >= pos.y && tile.y <= pos.y + size.y)
+			{
+				return false;
+			}
 		}
 	}
 
@@ -107,15 +129,44 @@ bool InventoryEntity::canFit(sf::Vector2i pos, ItemEntity* item)
 
 ItemEntity* InventoryEntity::getItem(sf::Vector2i tile)
 {
+	if (tile.x < 0 || tile.y < 0)
+	{
+		// Avoid getting in-slot items
+		return NULL;
+	}
+
 	for (size_t i = 0; i < items.size(); i++)
 	{
 		sf::Vector2i size = items[i]->getInventorySize();
 		sf::Vector2i pos = items[i]->getInventoryPos();
 
 		// AABB check to see if any item intercepts
-		if (tile.x >= pos.x && tile.x <= pos.x + size.x && tile.y >= pos.y && tile.y <= pos.y + size.y)
+		if (tile.x >= pos.x && tile.x < pos.x + size.x && tile.y >= pos.y && tile.y < pos.y + size.y)
 		{
 			return items[i];
+		}
+	}
+
+	return NULL;
+}
+
+ItemEntity* InventoryEntity::getItem(SpecialSlot slot)
+{
+	for (size_t i = 0; i < items.size(); i++)
+	{
+		if (slot == R_HAND || slot == L_HAND)
+		{
+			if (items[i]->getSpecialSlot() == slot || items[i]->getSpecialSlot() == B_HAND)
+			{
+				return items[i];
+			}
+		}
+		else
+		{
+			if (items[i]->getSpecialSlot() == slot)
+			{
+				return items[i];
+			}
 		}
 	}
 
@@ -126,6 +177,16 @@ bool InventoryEntity::setItem(sf::Vector2i pos, ItemEntity* item, bool sendNetwo
 {
 	if(canFit(pos, item))
 	{
+		for (size_t i = 0; i < items.size(); i++)
+		{
+			if (items[i] == item)
+			{
+				LOG(INFO) << "WTF!?";
+			}
+		}
+
+
+		items.push_back(item);
 		item->setInventory(this);
 		item->setInInventory(pos);
 
@@ -223,7 +284,7 @@ void InventoryEntity::removeItem(ItemEntity* item, sf::Vector2f worldPos, bool s
 		if (sendNetwork)
 		{
 			json args;
-			args["id"] = item->uid;
+			args["uid"] = item->uid;
 			args["x"] = worldPos.x;
 			args["y"] = worldPos.y;
 
@@ -239,6 +300,71 @@ void InventoryEntity::removeItem(ItemEntity* item, sf::Vector2f worldPos, bool s
 		}
 
 		onInventoryItemRemoved();
+	}
+}
+
+void InventoryEntity::moveItem(ItemEntity* item, sf::Vector2i pos, bool sendNetwork, ENetPeer * excludedPeer)
+{
+	if (getItem(pos) == NULL)
+	{
+		sf::Vector2i from = item->getInventoryPos();
+		SpecialSlot oldSlot = item->getSpecialSlot();
+
+		item->setInInventory(pos);
+
+		if (sendNetwork)
+		{
+			json args;
+			args["uid"] = item->uid;
+			args["x"] = pos.x;
+			args["y"] = pos.y;
+			args["slot"] = NORMAL;
+
+			if (excludedPeer != NULL)
+			{
+				sendGenericCallToAllBut(excludedPeer, "moveItem", args);
+			}
+			else
+			{
+				// We are the client so send to server
+				sendGenericCall(getProg()->getServer(), "moveItem", args);
+			}
+		}
+
+		onInventoryItemMoved(item, from, oldSlot);
+	}
+}
+
+void InventoryEntity::moveItemToSpecialSlot(ItemEntity* item, SpecialSlot slot, bool sendNetwork, ENetPeer * excludedPeer)
+{
+	if (slot != NORMAL)
+	{
+		sf::Vector2i from = item->getInventoryPos();
+		SpecialSlot oldSlot = item->getSpecialSlot();
+
+		item->setInventoryPos({ -1, -1 });
+		item->setInSpecialSlot(slot);
+
+		if (sendNetwork)
+		{
+			json args;
+			args["uid"] = item->uid;
+			args["x"] = -1;
+			args["y"] = -1;
+			args["slot"] = slot;
+
+			if (excludedPeer != NULL)
+			{
+				sendGenericCallToAllBut(excludedPeer, "moveItem", args);
+			}
+			else
+			{
+				// We are the client so send to server
+				sendGenericCall(getProg()->getServer(), "moveItem", args);
+			}
+		}
+
+		onInventoryItemMoved(item, from, oldSlot);
 	}
 }
 
@@ -288,4 +414,77 @@ void InventoryEntity::setSlotType(sf::Vector2i pos, InventorySlot type, bool sen
 			sendGenericCall(getProg()->getServer(), "setSlotType", args);
 		}
 	}
+}
+
+void InventoryEntity::update(float dt)
+{
+	Entity::update(dt);
+
+	std::string server;
+	if (getProg()->isClient())
+	{
+		server = "client";
+	}
+	else
+	{
+		server = "server";
+	}
+
+	LOG(INFO) << "Enumerate items in " << server << " id: " << uid;
+
+	LOG(INFO) << "---------------------------------";
+
+	for (size_t i = 0; i < items.size(); i++)
+	{
+		std::string slot = "";
+		if (items[i]->isInInventory())
+		{
+			slot = std::to_string(items[i]->getInventoryPos().x);
+			slot += ", ";
+			slot += std::to_string(items[i]->getInventoryPos().y);
+		}
+		else
+		{
+			if (items[i]->getSpecialSlot() == L_HAND)
+			{
+				slot = "L_HAND";
+			}
+			else if (items[i]->getSpecialSlot() == R_HAND)
+			{
+				slot = "R_HAND";
+			}
+			else
+			{
+				slot = "OTHER";
+			}
+		}
+
+		LOG(INFO) << "Item: " << items[i]->uid << " in (" << slot << ")";
+	}
+
+	LOG(INFO) << "---------------------------------";
+
+}
+
+json InventoryEntity::serialize()
+{
+	json j = Entity::serialize();
+
+	j["gridSizeX"] = gridSize.x;
+	j["gridSizeY"] = gridSize.y;
+
+	// We don't serialize items as they are responsible for adding themselves to inventories
+
+	return j;
+}
+
+void InventoryEntity::deserialize(json j)
+{
+	Entity::deserialize(j);
+
+	gridSize.x = j["gridSizeX"];
+	gridSize.y = j["gridSizeY"];
+
+	// We don't deserialize items as they are responsible for adding themselves to inventories
+	
 }

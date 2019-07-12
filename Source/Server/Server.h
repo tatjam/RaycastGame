@@ -26,6 +26,12 @@ public:
 
 	std::vector<ConnectedClient> clients;
 
+	virtual int getUIStart()
+	{
+		LOG(ERROR) << "Tried to getUIStart on the server, which is headless";
+		return 0;
+	}
+
 	virtual void mainFunc(int argc, char** argv) override;
 
 	virtual bool isServer() override
@@ -72,6 +78,12 @@ public:
 	virtual sf::RenderWindow* getWindow() override
 	{
 		LOG(ERROR) << "Tried to get window on the server, which is headless";
+		return NULL;
+	}
+
+	virtual thor::ActionMap<ActionType>* getActionMap()
+	{
+		LOG(ERROR) << "Tried to get the action map on the server, which is headless";
 		return NULL;
 	}
 

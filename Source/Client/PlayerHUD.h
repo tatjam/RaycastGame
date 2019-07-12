@@ -1,7 +1,10 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <Thor/Input.hpp>
 #include "../Map/Entities/Bases/InventoryEntity.h"
+#include "../Map/Entities/Bases/ItemEntity.h"
+#include "../Map/Entities/Sprite/EPlayer.h"
 
 class Client;
 
@@ -15,6 +18,9 @@ class PlayerHUD
 {
 private:
 
+	bool wasLeftDown;
+	bool wasRightDown;
+
 	Client* client;
 
 	sf::Sprite defaultHUDSpr;
@@ -23,7 +29,7 @@ private:
 	sf::RectangleShape colorer;
 	
 	const sf::Color DISABLED_COLOR = sf::Color(20, 20, 20);
-	const sf::Color FULL_COLOR = sf::Color(20, 20, 20);
+	const sf::Color FULL_COLOR = sf::Color(44, 44, 44);
 
 	const int tileWidth = 64;
 
@@ -48,6 +54,10 @@ public:
 	// You are given the different scalars
 	// gameHeight is NOT scaled
 	void draw(int screenScale, int uiScale, int gameHeight);
+
+	void handleHand(bool leftClick, bool rightClick, sf::Vector2i hoveredCoord, SpecialSlot hovered, InventoryEntity* player, ItemEntity* leftHand, ItemEntity* rightHand, ItemEntity* over);
+
+	void useItem(ItemEntity* item, EPlayer* player);
 
 	// Called AFTER the world update
 	void update(float dt);

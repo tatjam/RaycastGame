@@ -14,8 +14,9 @@ enum InventorySlot
 // Only used for items held by a player
 enum SpecialSlot
 {
+	NONE,
 	L_HAND,
 	R_HAND,
-	BOTH_HANDS,
+	B_HAND, //< Takes both hands
 	VISOR
 };

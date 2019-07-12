@@ -29,10 +29,10 @@ struct Light
 	// Only on AREA and SPOT
 	float maxDist;
 
-	// Only on SPOT
+	// Only on SPOT, same as a sprite's rotation
 	float direction;
 
-	// Only on SPOT, in degrees
+	// Only on SPOT, in radians
 	float amplitude;
 
 	// For softer lights, set to a high value, for stronger, to a lower
@@ -46,6 +46,8 @@ struct Light
 		pos = sf::Vector2f(0.5f, 0.5f);
 		light = sf::Vector3f(1.0f, 1.0f, 1.0f);
 		attenuation = 1.0f;
+		amplitude = 3.1415f / 2.0f;
+		direction = 0.0f;
 		this->id = id;
 	}
 };

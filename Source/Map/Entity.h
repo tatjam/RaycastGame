@@ -51,6 +51,7 @@ public:
 		UNIMPLEMENTED,	//< These should not exist in any save
 		PLAYER,
 		DOOR_SIMPLE,
+		ITEM_FLASHLIGHT,
 	};
 
 	uint32_t uid;

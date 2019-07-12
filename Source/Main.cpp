@@ -39,7 +39,8 @@ int main(int argc, char** argv)
 
 
 	el::Loggers::reconfigureAllLoggers(defaultConf);
-	
+	el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
+
 	START_EASYLOGGINGPP(argc, argv);
 
 	LOG(INFO) << "Initializing";

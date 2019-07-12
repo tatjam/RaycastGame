@@ -1,5 +1,6 @@
 #pragma once
 #include <Thor/Resources.hpp>
+#include <Thor/Input.hpp>
 
 #include "Map/World.h"
 
@@ -38,6 +39,16 @@ struct ConnectedClient
 	uint32_t entityControlled;
 };
 
+enum ActionType
+{
+	ON_LEFT_DOWN,
+	ON_LEFT_HOLD,
+	ON_LEFT_UP,
+	ON_RIGHT_DOWN,
+	ON_RIGHT_HOLD,
+	ON_RIGHT_UP
+};
+
 
 class ProgramType
 {
@@ -47,8 +58,12 @@ private:
 
 public:
 
-	virtual World* getWorld() = 0;
+	// The pixel at which the UI starts
+	virtual int getUIStart() = 0;
 
+	virtual World* getWorld() = 0;
+	
+	virtual thor::ActionMap<ActionType>* getActionMap() = 0;
 
 	virtual ENetHost* getHost() = 0;
 

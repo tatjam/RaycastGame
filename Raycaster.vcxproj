@@ -138,15 +138,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dependency\easylogging++.cpp" />
+    <ClCompile Include="Source\Map\Entities\Item\EFlashlight.cpp" />
     <ClCompile Include="Source\Client\PlayerHUD.cpp" />
-    <ClCompile Include="Source\Map\Entities\Sprite\Bases\ItemEntity.cpp" />
+    <ClCompile Include="Source\Map\Entities\Bases\ItemEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\InventoryEntity.cpp" />
     <ClCompile Include="Source\Material\Material.cpp" />
     <ClCompile Include="Source\Map\Entities\Tile\ESimpleDoor.cpp" />
     <ClCompile Include="Source\Map\Entities\Tile\Bases\DoorEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\SpriteEntity.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\TileEntity.cpp" />
-    <ClCompile Include="Source\Map\Entities\EPlayer.cpp" />
+    <ClCompile Include="Source\Map\Entities\Sprite\EPlayer.cpp" />
     <ClCompile Include="Source\Client\Client.cpp" />
     <ClCompile Include="Source\Map\Entity.cpp" />
     <ClCompile Include="Source\Map\Map.cpp" />
@@ -177,15 +178,17 @@
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h" />
     <ClInclude Include="Dependency\json.hpp" />
+    <ClInclude Include="Source\Map\Entities\AllEntities.h" />
+    <ClInclude Include="Source\Map\Entities\Item\EFlashlight.h" />
     <ClInclude Include="Source\Client\PlayerHUD.h" />
     <ClInclude Include="Source\Map\Entities\Bases\InventorySlot.h" />
-    <ClInclude Include="Source\Map\Entities\Sprite\Bases\ItemEntity.h" />
+    <ClInclude Include="Source\Map\Entities\Bases\ItemEntity.h" />
     <ClInclude Include="Source\Map\Entities\Bases\InventoryEntity.h" />
     <ClInclude Include="Source\Material\Material.h" />
     <ClInclude Include="Source\Map\Entities\Tile\ESimpleDoor.h" />
     <ClInclude Include="Source\Map\Entities\Tile\Bases\DoorEntity.h" />
     <ClInclude Include="Source\Map\Entities\Bases\TileEntity.h" />
-    <ClInclude Include="Source\Map\Entities\EPlayer.h" />
+    <ClInclude Include="Source\Map\Entities\Sprite\EPlayer.h" />
     <ClInclude Include="Source\Client\Client.h" />
     <ClInclude Include="Source\Map\Entity.h" />
     <ClInclude Include="Source\Map\Light.h" />

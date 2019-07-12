@@ -69,6 +69,15 @@ public:
 	Entity* findEntity(uint32_t uid);
 	Sprite* findSprite(uint32_t sprite_id);
 
+	// Saves some lines of code, returns NULL if not found or
+	// if typecast failed
+	template<typename T> 
+	T* findEntity(uint32_t uid)
+	{
+		Entity* asEnt = findEntity(uid);
+		return dynamic_cast<T*>(asEnt);
+	}
+
 	World();
 	~World();
 };

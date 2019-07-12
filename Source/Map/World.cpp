@@ -62,14 +62,21 @@ void World::deserialize(json data, ProgramType* prog)
 
 	uid = data["uid"];
 
-	// Load entities
+	// Load entities, this is a two-step process as many deserializers need
+	// all entities to be PRESENT, but not deserialized (for example, inventories)
 	entities.clear();
 	json ents = data["entities"];
 	for (json ent : ents)
 	{
 		Entity* entity = Entity::createFromType(ent["type"], prog, ent["uid"]);
-		entity->deserialize(ent);
+
 		entities.push_back(entity);
+	}
+
+	for (json ent : ents)
+	{
+		Entity* toDeserialize = findEntity(ent["uid"]);
+		toDeserialize->deserialize(ent);
 	}
 }
 
