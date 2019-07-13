@@ -73,6 +73,11 @@ bool Client::connect(std::string ip, uint16_t port)
 		event.type == ENET_EVENT_TYPE_CONNECT)
 	{
 		LOG(INFO) << "Connected successfully";
+		// Send want to play packet
+		Packet pak;
+		pak.pushByte(MSG_PLAY);
+		pak.send(event.peer);
+
 		return true;
 	}
 	else

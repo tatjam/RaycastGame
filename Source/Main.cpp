@@ -6,6 +6,7 @@
 #include <Dependency/easylogging++.h>
 #include "Server/Server.h"
 #include "Client/Client.h"
+#include "Launcher/Launcher.h"
 
 #include <string>
 
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
 
 	}
 
-	ProgramType* prog;
+	ProgramType* prog = NULL;
 
 	if (argc >= 2 && strcmp(argv[1], "server") == 0)
 	{
@@ -60,7 +61,7 @@ int main(int argc, char** argv)
 		prog = new Server();
 		prog->mainFunc(argc, argv);
 	}
-	else
+	else if(argc >= 2 && strcmp(argv[1], "client") == 0)
 	{
 		LOG(INFO) << "Delaying to allow server to start";
 		sf::sleep(sf::seconds(1.5f));
@@ -68,9 +69,21 @@ int main(int argc, char** argv)
 		prog = new Client();
 		prog->mainFunc(argc, argv);
 	}
+	else
+	{
+		// Launcher
+		Launcher launcher;
+		launcher.launcherMain(argc, argv);
+
+		// The launcher will probably launch an instance of the game
+		// so fear not, we are out
+	}
 
 
-	delete prog;
+	if (prog != NULL)
+	{
+		delete prog;
+	}
 
 	enet_deinitialize();
 

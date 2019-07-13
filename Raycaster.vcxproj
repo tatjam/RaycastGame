@@ -76,12 +76,12 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programming\TGUI-0.8.5-vc15-32bit-for-SFML-2.5.1\TGUI-0.8\include;C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ELPP_THREAD_SAFE;NOMINMAX ;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>D:\Programming\enet-1.3.14.tar\enet-1.3.14;D:\Programming\Thor\lib;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;winmm.lib;enet.lib;thor-d.lib;sfml-graphics-d.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-audio-d.lib;sfml-network-d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Programming\TGUI-0.8.5-vc15-32bit-for-SFML-2.5.1\TGUI-0.8\lib;D:\Programming\enet-1.3.14.tar\enet-1.3.14;D:\Programming\Thor\lib;D:\Programming\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;winmm.lib;enet.lib;thor-d.lib;sfml-graphics-d.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-audio-d.lib;sfml-network-d.lib;tgui-d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -105,7 +105,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programming\TGUI-0.8.5-vc15-32bit-for-SFML-2.5.1\TGUI-0.8\include;C:\Users\Usuario\Source\Repos\Raycaster;D:\Programming\enet-1.3.14.tar\enet-1.3.14\include;D:\Programming\Thor\include;D:\Programming\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ELPP_THREAD_SAFE;NOMINMAX ;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -114,8 +114,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\Programming\enet-1.3.14.tar\enet-1.3.14;D:\Programming\Thor\lib;D:\Programming\SFML-2.4.2-windows-vc14-32-bit\SFML-2.4.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>enet.lib;winmm.lib;ws2_32.lib;thor.lib;sfml-graphics.lib;sfml-system.lib;sfml-window.lib;sfml-audio.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Programming\TGUI-0.8.5-vc15-32bit-for-SFML-2.5.1\TGUI-0.8\lib;D:\Programming\enet-1.3.14.tar\enet-1.3.14;D:\Programming\Thor\lib;D:\Programming\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>enet.lib;winmm.lib;ws2_32.lib;thor.lib;sfml-graphics.lib;sfml-system.lib;sfml-window.lib;sfml-audio.lib;tgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dependency\easylogging++.cpp" />
+    <ClCompile Include="Source\Launcher\Launcher.cpp" />
     <ClCompile Include="Source\Map\Entities\Item\EFlashlight.cpp" />
     <ClCompile Include="Source\Client\PlayerHUD.cpp" />
     <ClCompile Include="Source\Map\Entities\Bases\ItemEntity.cpp" />
@@ -172,12 +173,15 @@
     <None Include="sfml-system-d-2.dll" />
     <None Include="sfml-window-2.dll" />
     <None Include="sfml-window-d-2.dll" />
+    <None Include="tgui-d.dll" />
+    <None Include="tgui.dll" />
     <None Include="thor-d.dll" />
     <None Include="thor.dll" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependency\easylogging++.h" />
     <ClInclude Include="Dependency\json.hpp" />
+    <ClInclude Include="Source\Launcher\Launcher.h" />
     <ClInclude Include="Source\Map\Entities\AllEntities.h" />
     <ClInclude Include="Source\Map\Entities\Item\EFlashlight.h" />
     <ClInclude Include="Source\Client\PlayerHUD.h" />
@@ -200,6 +204,7 @@
     <ClInclude Include="Source\ProgramType.h" />
     <ClInclude Include="Source\Server\Server.h" />
     <ClInclude Include="Source\Map\Entities\Bases\SpriteEntity.h" />
+    <ClInclude Include="Source\Server\ServerInfo.h" />
     <ClInclude Include="Source\Utils.h" />
   </ItemGroup>
   <ItemGroup>

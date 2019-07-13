@@ -10,7 +10,7 @@
 #include <SFML/System.hpp>
 
 #include "../ProgramType.h"
-
+#include "ServerInfo.h"
 
 
 class Server : public ProgramType

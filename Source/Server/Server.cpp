@@ -39,34 +39,9 @@ void Server::mainFunc(int argc, char** argv)
 
 		if (event.type == ENET_EVENT_TYPE_CONNECT)
 		{
-			if (playing)
-			{
-				LOG(INFO) << "Client tried to connect while ingame, denied.";
-				enet_peer_disconnect(event.peer, 0);
-			}
-			else
-			{
-				LOG(INFO) << "Client connected";
-				// Accept new client
-				ConnectedClient newClient = ConnectedClient();
-				newClient.peer = event.peer;
-				newClient.needsDownload = true;
+			LOG(INFO) << "Received new client (may be ping)";
+			// Do nothing just yet
 
-				// Give him an entity
-				// We do this here to prevent the client from
-				// getting an entity which will be overwritten by the download
-				EPlayer* playerEnt = dynamic_cast<EPlayer*>(world.createGlobalEntity(Entity::PLAYER, this));
-				newClient.entityControlled = playerEnt->uid;
-
-				ItemEntity* flashlightEnt = dynamic_cast<ItemEntity*>(world.createGlobalEntity(Entity::ITEM_FLASHLIGHT, this));
-				
-				playerEnt->setItem({ 3, 0 }, flashlightEnt, true, newClient.peer);
-
-				clients.push_back(newClient);
-
-
-				
-			}
 		}
 		else if (event.type == ENET_EVENT_TYPE_DISCONNECT)
 		{
@@ -88,9 +63,9 @@ void Server::mainFunc(int argc, char** argv)
 				clients.erase(clients.begin() + index);
 			}
 
-			if (clients.size() == 0)
+			if (clients.size() == 0 && playing)
 			{
-				LOG(INFO) << "All clients disconnected, closing";
+				LOG(INFO) << "All clients disconnected (while ingame), closing";
 				break;
 			}
 		}
@@ -102,6 +77,62 @@ void Server::mainFunc(int argc, char** argv)
 			{
 				pak.popByte();
 				world.handleCommand(pak, event.peer);
+			}
+			else if (pak.getType() == MSG_PLAY)
+			{
+				LOG(INFO) << "Connection requested playing";
+
+				if (playing)
+				{
+					LOG(INFO) << "Denied, game is in progress"; 
+					// TODO: Hot joining
+					enet_peer_disconnect(event.peer, 0);
+				}
+				else
+				{
+
+					// Accept new client
+					ConnectedClient newClient = ConnectedClient();
+					newClient.peer = event.peer;
+					newClient.needsDownload = true;
+
+					// Give him an entity
+					// We do this here to prevent the client from
+					// getting an entity which will be overwritten by the download
+					EPlayer* playerEnt = dynamic_cast<EPlayer*>(world.createGlobalEntity(Entity::PLAYER, this));
+					newClient.entityControlled = playerEnt->uid;
+
+					ItemEntity* flashlightEnt = dynamic_cast<ItemEntity*>(world.createGlobalEntity(Entity::ITEM_FLASHLIGHT, this));
+
+					playerEnt->setItem({ 3, 0 }, flashlightEnt, true, newClient.peer);
+
+					clients.push_back(newClient);
+				}
+
+			}
+			else if (pak.getType() == MSG_GET_DATA)
+			{
+				LOG(INFO) << "Connection requested server data";
+
+				// Send data packet
+				Packet out;
+				ServerInfo outInfo;
+
+				outInfo.name = "Tatjam's Server";
+				outInfo.motd = "Welcome to Tatjam's server!";
+				outInfo.maxPlayers = 20;
+				outInfo.connectedPlayers = 10;
+				outInfo.gameMode = "Survival";
+				outInfo.mapName = "Deep Station I";
+
+				out.pushJson(outInfo.serialize());
+				out.send(event.peer);
+			}
+			else if (pak.getType() == MSG_PING)
+			{
+				Packet out;
+				out.pushByte(MSG_PING);
+				out.send(event.peer);
 			}
 
 			enet_packet_destroy(event.packet);
@@ -298,7 +329,7 @@ void Server::downloadTo(ConnectedClient* target)
 Server::Server()
 {
 	playing = false;
-	targetPlayers = 2;
+	targetPlayers = 1;
 }
 
 

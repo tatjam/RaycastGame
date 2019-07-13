@@ -32,6 +32,14 @@
 // byte entityType
 // UID uid
 
+#define MSG_PLAY 'P'
+
+// Gets the lobby data as json, used by launchers
+// or web services
+#define MSG_GET_DATA 'p'
+
+#define MSG_PING 'x'
+
 struct ConnectedClient
 {
 	ENetPeer* peer;

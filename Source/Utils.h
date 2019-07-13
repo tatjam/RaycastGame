@@ -1,9 +1,18 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <algorithm>
+#include <cctype>
+#include <locale>
+
 
 sf::Image rotate90(sf::Image* original);
 
+std::string loadFile(const std::string& path);
 
+// Overwrites previous ALWAYS
+void writeFile(const std::string& path, const std::string& contents);
+
+inline bool fileExists(const std::string& path);
 
 inline void hash_combine(std::size_t& seed) { }
 
@@ -25,3 +34,9 @@ struct std::hash<sf::Vector2i>
 		return seed;
 	}
 };
+
+static inline void rtrim(std::string &s) {
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+		return !std::isspace(ch);
+	}).base(), s.end());
+}

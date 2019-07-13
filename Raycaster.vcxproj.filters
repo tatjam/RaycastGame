@@ -30,6 +30,8 @@
     <None Include="sfml-window-d-2.dll" />
     <None Include="thor.dll" />
     <None Include="thor-d.dll" />
+    <None Include="tgui.dll" />
+    <None Include="tgui-d.dll" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp">
@@ -90,6 +92,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Map\Entities\Sprite\EPlayer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Launcher\Launcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -167,6 +172,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Map\Entities\Sprite\EPlayer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Launcher\Launcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Server\ServerInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

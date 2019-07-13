@@ -1,4 +1,8 @@
 #include "Utils.h"
+#include <string>
+#include <fstream>
+#include <streambuf>
+#include <stdio.h>
 
 sf::Image rotate90(sf::Image* original)
 {
@@ -26,4 +30,31 @@ for (size_t orY = 0; orY < orHeight; orY++)
 out.create(orHeight, orWidth, pixels);
 free(pixels);
 return out;
+}
+
+std::string loadFile(const std::string& path)
+{
+	std::ifstream t(path);
+	std::string str((std::istreambuf_iterator<char>(t)),
+		std::istreambuf_iterator<char>());
+
+	return str;
+}
+
+void writeFile(const std::string& path, const std::string& contents)
+{
+	if (fileExists(path))
+	{
+		remove(path.c_str());
+	}
+
+	std::ofstream out(path);
+	out << contents;
+	out.close();
+}
+
+inline bool fileExists(const std::string& path)
+{
+	std::ifstream f(path.c_str());
+	return f.good();
 }
