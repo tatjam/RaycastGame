@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dependency\easylogging++.cpp" />
+    <ClCompile Include="Source\Editor\Editor.cpp" />
     <ClCompile Include="Source\Launcher\Launcher.cpp" />
     <ClCompile Include="Source\Map\Entities\Item\EFlashlight.cpp" />
     <ClCompile Include="Source\Client\PlayerHUD.cpp" />
@@ -179,8 +180,10 @@
     <None Include="thor.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dependency\CLI11.hpp" />
     <ClInclude Include="Dependency\easylogging++.h" />
     <ClInclude Include="Dependency\json.hpp" />
+    <ClInclude Include="Source\Editor\Editor.h" />
     <ClInclude Include="Source\Launcher\Launcher.h" />
     <ClInclude Include="Source\Map\Entities\AllEntities.h" />
     <ClInclude Include="Source\Map\Entities\Item\EFlashlight.h" />

@@ -8,32 +8,7 @@
 
 #define EDGE_MARGIN 10
 
-// Cuts the port out of an address
-std::string getAddress(const std::string address)
-{
-	return address.substr(0, address.find_last_of(':'));
-}
 
-// Returns def if none
-int getPort(const std::string address, int def = 1234)
-{
-	std::string sub = address.substr(address.find_last_of(':') + 1);
-	
-	try
-	{
-		int out = std::stoi(sub);
-
-		return out;
-	}
-	catch (std::invalid_argument a)
-	{
-		return def;
-	}
-	catch (std::out_of_range a)
-	{
-		return def;
-	}
-}
 
 void onTabSelected(tgui::Gui& gui, std::string selectedTab)
 {
@@ -60,15 +35,6 @@ void onTabSelected(tgui::Gui& gui, std::string selectedTab)
 
 void loadPlayWidgets(tgui::Gui& gui, tgui::Panel::Ptr panel, tgui::Tabs::Ptr tabs, Launcher* launcher)
 {
-	auto launchClient = tgui::Button::create("Connect");
-	launchClient->setSize(90, 60);
-	launchClient->setPosition(panel->getSize().x - EDGE_MARGIN - launchClient->getSize().x, panel->getFullSize().y - tabs->getFullSize().y - EDGE_MARGIN - launchClient->getSize().y);
-
-	launchClient->connect("pressed", [launcher, &gui]() 
-	{
-		std::string address = gui.get<tgui::TextBox>("serverIP")->getText();
-		launcher->launchGameClient(address);
-	});
 
 	auto usernameLabel = tgui::Label::create("Username: ");
 	auto passwordLabel = tgui::Label::create("Password: ");
@@ -193,10 +159,21 @@ void loadPlayWidgets(tgui::Gui& gui, tgui::Panel::Ptr panel, tgui::Tabs::Ptr tab
 		}
 	});
 
+	auto launchClient = tgui::Button::create("Connect");
+	launchClient->setSize(90, 60);
+	launchClient->setPosition(panel->getSize().x - EDGE_MARGIN - launchClient->getSize().x, panel->getFullSize().y - tabs->getFullSize().y - EDGE_MARGIN - launchClient->getSize().y);
+
+	launchClient->connect("pressed", [launcher, panel]()
+	{
+		std::string address = panel->get<tgui::EditBox>("serverIP")->getText();
+		launcher->launchGameClient(address);
+	});
+
+
 	auto serverInfoGroup = tgui::Panel::create();
 	serverInfoGroup->setSize(panel->getSize().x - serverList->getSize().x - 3 * EDGE_MARGIN, serverList->getSize().y + serverIP->getSize().y + addServer->getSize().y + EDGE_MARGIN);
 	serverInfoGroup->setPosition(serverList->getPosition().x + serverList->getSize().x + EDGE_MARGIN, EDGE_MARGIN);
-	serverInfoGroup->getRenderer()->setBorderColor(tgui::Color(0, 0, 0));
+	//serverInfoGroup->getRenderer()->setBorderColor(tgui::Color(0, 0, 0));
 	serverInfoGroup->getRenderer()->setBorders(tgui::Borders(1, 1, 1, 1));
 	
 	auto serverName = tgui::Label::create();
@@ -244,8 +221,9 @@ void loadPlayWidgets(tgui::Gui& gui, tgui::Panel::Ptr panel, tgui::Tabs::Ptr tab
 	motd->setPosition(-1, serverPingLabel->getPosition().y + serverPingLabel->getSize().y);
 	motd->setSize(serverInfoGroup->getSize().x, serverInfoGroup->getSize().y - serverPingLabel->getPosition().y - serverPingLabel->getSize().y);
 	motd->setText("Message of the day!\nWelcome to our very beautiful server\n\n\n\n\nText far down below");
-	motd->getRenderer()->setBorderColor(sf::Color(0, 0, 0));
+	motd->getRenderer()->setBorderColor(sf::Color(89, 89, 95));
 	motd->getRenderer()->setBorders({ 1, 1, 1, 1 });
+	//motd->getRenderer()->setBackgroundColor(sf::Color(49, 49, 53));
 	//motd->getRenderer()->setScrollbarWidth(8.0f);
 	motd->setScrollbarPolicy(tgui::Scrollbar::Policy::Always);
 
@@ -322,21 +300,24 @@ void Launcher::loadWidgets(tgui::Gui& gui)
 
 void checkerThread(Launcher* launcher)
 {
-	size_t i = 0;
+	int i = 0;
+
 	while (launcher->runThread)
 	{
 		std::shared_ptr<ServerData> toWork = NULL;
 
 		launcher->mtx.lock();
-		for (i; i < launcher->servers.size(); i++)
+
+		if (i < launcher->servers.size())
 		{
 			if ((launcher->servers[i]->firstGo == true || launcher->servers[i]->infoClock.getElapsedTime().asSeconds() >= 5.0f) && launcher->servers[i]->inList)
 			{
 				toWork = launcher->servers[i];
 				launcher->servers[i]->firstGo = false;
-				break;
 			}
 		}
+
+		i++;
 
 		if (i >= launcher->servers.size())
 		{
@@ -410,6 +391,7 @@ void Launcher::launcherMain(int argc, char** argv)
 {
 
 	win = new sf::RenderWindow(sf::VideoMode(LAUNCHER_WIDTH, LAUNCHER_HEIGHT), "Raycaster Launcher");
+	//win->setFramerateLimit(30);
 	gui = new tgui::Gui(*win);
 
 	std::string serversFile;
@@ -423,11 +405,15 @@ void Launcher::launcherMain(int argc, char** argv)
 
 	serversJ = json::parse(serversFile);
 
+	tgui::Theme theme{ "Assets/ui/Black.txt" };
+	tgui::Theme::setDefault(&theme);
+
 	loadWidgets(*gui);
 
 
 	loadServersJson();
 	updateServers();
+
 
 
 	runThread = true;
@@ -446,9 +432,16 @@ void Launcher::launcherMain(int argc, char** argv)
 			gui->handleEvent(ev);
 		}
 
-		win->clear();
+		win->clear(sf::Color(37, 37, 37));
 
-		gui->draw();
+		try
+		{
+			gui->draw();
+		}
+		catch(...)
+		{
+			LOG(ERROR) << "Error drawing GUI";
+		}
 
 		win->display();
 	}
@@ -466,7 +459,15 @@ void Launcher::updateServers()
 
 	bool sizeChange = listBox->getItemCount() != servers.size();
 
-	listBox->removeAllItems();
+	if (sizeChange)
+	{
+		listBox->removeAllItems();
+		
+		for (size_t i = 0; i < servers.size(); i++)
+		{
+			listBox->addItem("Dummy");
+		}
+	}
 
 	for (size_t i = 0; i < servers.size(); i++)
 	{
@@ -475,15 +476,13 @@ void Launcher::updateServers()
 		if (servers[i]->hasInfo)
 		{
 			compound += servers[i]->info.name;
-
-			listBox->addItem(compound, std::to_string(i));
 		}
 		else
 		{
 			compound += servers[i]->address + ":" + std::to_string(servers[i]->port);
-			
-			listBox->addItem(compound, std::to_string(i));
 		}
+
+		listBox->changeItemByIndex(i, compound);
 	}
 
 	if (oldIndex >= servers.size())
@@ -504,6 +503,7 @@ void Launcher::updateServers()
 
 
 	updateServersJson();
+	updateServerInfo();
 }
 
 void Launcher::loadServersJson()
@@ -548,35 +548,58 @@ void Launcher::updateServersJson()
 
 void Launcher::updateServerInfo()
 {
-	auto panel = gui->get<tgui::Panel>("serverInfoGroup");
-
-	auto serverName = panel->get<tgui::Label>("serverName");
-	auto serverMap = panel->get<tgui::Label>("serverMap");
-	auto serverPlayers = panel->get<tgui::Label>("serverPlayers");
-	auto serverGameMode = panel->get<tgui::Label>("serverGameMode");
-	auto motd = panel->get<tgui::Label>("motd");
-
-	if (selected->hasInfo)
+	if (selected)
 	{
-		serverName->setText(selected->info.name);
-		serverMap->setText(selected->info.mapName);
-		serverPlayers->setText(std::to_string(selected->info.connectedPlayers) + "/" + std::to_string(selected->info.maxPlayers));
-		serverGameMode->setText(selected->info.gameMode);
-		motd->setText(selected->info.motd);
-	}
-	else
-	{
-		serverName->setText("Trying to get server info");
-		serverMap->setText("");
-		serverPlayers->setText("");
-		serverGameMode->setText("");
-		motd->setText("");
+		auto panel = gui->get<tgui::Panel>("serverInfoGroup");
+
+		auto serverName = panel->get<tgui::Label>("serverName");
+		auto serverMap = panel->get<tgui::Label>("serverMap");
+		auto serverPlayers = panel->get<tgui::Label>("serverPlayers");
+		auto serverGameMode = panel->get<tgui::Label>("serverGameMode");
+		auto motd = panel->get<tgui::Label>("motd");
+
+
+		if (selected->hasInfo)
+		{
+			serverName->setText(selected->info.name);
+			serverMap->setText(selected->info.mapName);
+			serverPlayers->setText(std::to_string(selected->info.connectedPlayers) + "/" + std::to_string(selected->info.maxPlayers));
+			serverGameMode->setText(selected->info.gameMode);
+			motd->setText(selected->info.motd);
+		}
+		else
+		{
+			serverName->setText("Trying to get server info");
+			serverMap->setText("");
+			serverPlayers->setText("");
+			serverGameMode->setText("");
+			motd->setText("Welcome to my server!\nRules:\n- Rule 1\n- Rule 2\n- Rule 3\n\n\n\n\n- Far below");
+		}
 	}
 	
 }
 
 void Launcher::launchGameClient(std::string address)
 {
+	Client* client = new Client();
+
+	std::unordered_map<std::string, std::string> vals;
+	vals["type"] = "client";
+	vals["addr"] = address;
+
+	closeLauncher();
+
+	client->mainFunc(vals);
+
+	delete client;
+
+}
+
+void Launcher::closeLauncher()
+{
+	win->close();
+	runThread = false;
+
 }
 
 Launcher::Launcher()

@@ -1,1 +1,1 @@
-{"servers":[{"address":"localhost","port":1234},{"address":"127.0.0.1","port":1234}]}
+{"servers":[{"address":"127.0.0.1","port":1234},{"address":"localhost","port":1234}]}

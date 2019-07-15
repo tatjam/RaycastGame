@@ -32,7 +32,7 @@ public:
 		return 0;
 	}
 
-	virtual void mainFunc(int argc, char** argv) override;
+	virtual void mainFunc(std::unordered_map<std::string, std::string> vals) override;
 
 	virtual bool isServer() override
 	{

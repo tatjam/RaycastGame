@@ -1,8 +1,10 @@
 #include "Server.h"
 #include "../Map/Entity.h"
 #include "../Map/Entities/AllEntities.h"
+#include <Dependency/CLI11.hpp>
 
-void Server::mainFunc(int argc, char** argv)
+
+void Server::mainFunc(std::unordered_map<std::string, std::string> vals)
 {
 	ENetAddress address;
 	server = NULL;
@@ -118,8 +120,8 @@ void Server::mainFunc(int argc, char** argv)
 				Packet out;
 				ServerInfo outInfo;
 
-				outInfo.name = "Tatjam's Server";
-				outInfo.motd = "Welcome to Tatjam's server!";
+				outInfo.name = "My Server";
+				outInfo.motd = "Welcome to my server!\nRules:\n- Rule 1\n- Rule 2\n- Rule 3\n\n\n\n\n- Far below";
 				outInfo.maxPlayers = 20;
 				outInfo.connectedPlayers = 10;
 				outInfo.gameMode = "Survival";

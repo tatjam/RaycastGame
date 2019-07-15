@@ -90,7 +90,7 @@ public:
 		return !isServer();
 	}
 
-	virtual void mainFunc(int argc, char** argv) = 0;
+	virtual void mainFunc(std::unordered_map<std::string, std::string> vals) = 0;
 
 	virtual sf::RenderWindow* getWindow() = 0;
 

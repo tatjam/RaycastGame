@@ -4,6 +4,11 @@
 #include <cctype>
 #include <locale>
 
+// Cuts the port out of an address
+std::string getAddress(const std::string address);
+
+// Returns def if none
+int getPort(const std::string address, int def = 1234);
 
 sf::Image rotate90(sf::Image* original);
 

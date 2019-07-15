@@ -14,6 +14,8 @@ void EFlashlight::doContextualMenuAction(std::string action)
 
 void EFlashlight::update(float dt)
 {
+	ItemEntity::update(dt);
+
 	if (lightOn)
 	{
 		setItemFrame(1);

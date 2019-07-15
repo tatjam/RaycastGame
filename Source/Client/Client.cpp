@@ -1,18 +1,22 @@
 #include "Client.h"
 #include "../Map/Entities/Bases/TileEntity.h"
 #include "../Map/Entities/Sprite/EPlayer.h"
+#include <Dependency/CLI11.hpp>
 
-void Client::mainFunc(int argc, char** argv)
+void Client::mainFunc(std::unordered_map<std::string, std::string> vals)
 {
-	std::string ip = "localhost";
-	uint16_t port = 1234;
 
-	// Try to get IP to conncet to
-	if (argc >= 3)
+	std::string addr = "localhost:1234";
+	auto it = vals.find("addr");
+	if (it != vals.end())
 	{
-		std::string as_str = argv[2];
-		ip = as_str;
+		addr = it->second;
 	}
+
+
+
+	std::string ip = getAddress(addr);
+	uint16_t port = getPort(addr);
 
 	LOG(INFO) << "Connecting to " << ip << ":" << port;
 
@@ -170,13 +174,14 @@ void Client::play()
 	int screenScale = 2;
 #endif
 	int uiScale = 1;
+	int uiWidth = 1024 * uiScale;
 	int uiHeight = 286 * uiScale;
 	int topUiHeight = 0 * uiScale;
 
 	uiStart = renderHeight * screenScale;
 
-
-	win = new sf::RenderWindow(sf::VideoMode(renderWidth * screenScale, renderHeight * screenScale + uiHeight + topUiHeight), "Raycasting game");
+	// Window 
+	win = new sf::RenderWindow(sf::VideoMode(uiWidth, renderHeight * screenScale + uiHeight + topUiHeight), "Raycasting game");
 	//win->setFramerateLimit(60);
 
 	sf::Font font = sf::Font();
@@ -271,8 +276,8 @@ void Client::play()
 			enet_packet_destroy(netevent.packet);
 		}
 
-		// Not really neccesary
-		win->clear();
+		// Not really neccesary on most cases
+		win->clear(sf::Color(27, 27, 27));
 
 		EPlayer* player = (EPlayer*)controlledEntityPtr;
 
@@ -316,7 +321,8 @@ void Client::play()
 			targetTex.loadFromImage(target);
 			targetSpr.setTexture(targetTex);
 			targetSpr.setScale((float)screenScale, (float)screenScale);
-			targetSpr.setPosition(0, (float)topUiHeight);
+			// Center if required
+			targetSpr.setPosition((win->getSize().x - screenScale * renderWidth) / 2.0f, (float)topUiHeight);
 
 			win->draw(targetSpr);
 

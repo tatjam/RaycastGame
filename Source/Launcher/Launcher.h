@@ -8,7 +8,8 @@
 #include "../Server/ServerInfo.h"
 #include <thread>
 #include <mutex>
-
+#include "../Client/Client.h"
+#include "../Server/Server.h"
 
 #include <memory>
 
@@ -72,6 +73,7 @@ public:
 	void updateServerInfo();
 
 	void launchGameClient(std::string address);
+	void closeLauncher();
 
 	Launcher();
 	~Launcher();

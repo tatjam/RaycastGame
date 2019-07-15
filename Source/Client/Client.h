@@ -36,7 +36,7 @@ public:
 	// "Upcasted" to a SpriteEntity as it's neccesary for the rendering
 	SpriteEntity* controlledEntityPtr;
 
-	virtual void mainFunc(int argc, char** argv) override;
+	virtual void mainFunc(std::unordered_map<std::string, std::string> vals) override;
 
 	bool connect(std::string ip, uint16_t port);
 	bool download();
